@@ -15,7 +15,7 @@ class LogReporter(Reporter, ABC):
         self._logAspect.logger().info('Started watching...')
 
     def onNewReportAvailable(self, report: SuspiciousActivityReport):
-        if report.activityLevel == SuspiciousActivityLevel.UNSUSPICIOUS:
+        if report.activityLevel is None:
             return
 
         if report.activityLevel == SuspiciousActivityLevel.WARNING:
