@@ -1,8 +1,8 @@
-import re
 from abc import ABC
-from re import Pattern
+from typing import Tuple
 
-from inputOutput.HiveNetwork import HiveComment
+from actionSystem.ActionHandling import PolicyAction
+from services.HiveNetwork import HiveComment
 from monitoringSystem.MonitoringAgency import Agent
 from reportingSystem.Reporting import SuspiciousActivityReport, SuspiciousActivityLevel
 
@@ -18,33 +18,28 @@ class SuspectHunterAgent(Agent, ABC):
         self._downvoterIndicators = rules['downvoterIndicators']
 
     def _hasPostDownvoteIndicator(self, post: HiveComment):
-        for downvoteIndicator in self._downvoterIndicators:
-            vote = post.get_vote_with_curation(downvoteIndicator, True)
 
-            if vote is None:
+        downvoters: list = []
+
+        for downvoteIndicator in self._downvoterIndicators:
+            if downvoteIndicator not in post.cachedVotes.keys():
                 continue
 
-            if int(vote['percent']) < 0:
-                return downvoteIndicator
+            if int(post.cachedVotes[downvoteIndicator]) < 0:
+                downvoters.append(downvoteIndicator)
 
-        return None
+        return downvoters
 
-    def onSuspicionQuery(self, post: HiveComment) -> SuspiciousActivityReport:
+    def onSuspicionQuery(self, post: HiveComment) -> Tuple[SuspiciousActivityReport, PolicyAction]:
 
-        downvoter = self._hasPostDownvoteIndicator(post)
-        if downvoter is not None:
+        downvoters = self._hasPostDownvoteIndicator(post)
+        if len(downvoters) > 0:
             return SuspiciousActivityReport(
                 post.author,
                 post.permlink,
                 self._agentId,
-                SuspiciousActivityLevel.WARNING,
-                'User was punished for this post by {downvoter} with downvote.'.format(downvoter=downvoter)
-            )
+                SuspiciousActivityLevel.CONVICTION_DETECTED,
+                'User was punished for this post by {downvoter} with downvote.'.format(downvoter=', '.join(downvoters))
+            ), None
 
-        return SuspiciousActivityReport(
-            post.author,
-            post.permlink,
-            self._agentId,
-            SuspiciousActivityLevel.UNSUSPICIOUS,
-            ''
-        )
+        return None, None
