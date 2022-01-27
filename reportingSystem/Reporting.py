@@ -3,9 +3,10 @@ from enum import Enum
 
 
 class SuspiciousActivityLevel(Enum):
-    UNSUSPICIOUS: int = 1
-    WARNING: int = 2
-    RULE_BREAKER: int = 3
+    WARNING: int = 1
+    VIOLATION: int = 2
+    ALERT: int = 3
+    CONVICTION_DETECTED: int = 4
 
 
 class SuspiciousActivityReport:
@@ -56,19 +57,21 @@ class Reporter(ABC):
 
 class ReportDispatcher:
     _reporters: list
+    _reports: list
 
     def __init__(self, reportersInfo: dict):
         self._reporters = []
+        self._reports = []
 
         for reporterClass in reportersInfo.keys():
             reporter: Reporter = reporterClass()
             reporter.onStart(reportersInfo[reporterClass])
             self._reporters.append(reporter)
 
-    def sendReports(self, reports: list):
-        for report in reports:
-            self.sendReport(report)
+    def handOverReport(self, report: SuspiciousActivityReport):
+        self._reports.append(report)
 
-    def sendReport(self, report: SuspiciousActivityReport):
-        for reporter in self._reporters:
-            reporter.onNewReportAvailable(report)
+    def promoteReports(self):
+        for report in self._reports:
+            for reporter in self._reporters:
+                reporter.onNewReportAvailable(report)
