@@ -1,3 +1,6 @@
+from reportingSystem.Reporting import SuspiciousActivityLevel
+
+
 class Configuration:
     sourceBlacklistAgentRules: dict = {
         'blacklist': [
@@ -20,7 +23,15 @@ class Configuration:
         ]
     }
 
-    lmacBeneficiaryAgent: dict = {'minimumBenefication': 2000, 'requiredBeneficiary': 'lmac'}
-    agentSupervisor: dict = {'hiveCommunityId': 'hive-174695', 'hiveCommunityTag': 'letsmakeacollage'}
+    lmacBeneficiaryAgentRules: dict = {'minimumBenefication': 2000, 'requiredBeneficiary': 'lmac'}
 
-    suspectHunterAgent: dict = {'downvoterIndicators': ['spaminator', 'theycallmedan', 'shaka', 'mballesteros', 'agmoore', 'quantumg']}
+    suspectHunterAgentRules: dict = {
+        'downvoterIndicators': ['spaminator', 'theycallmedan', 'shaka', 'mballesteros', 'agmoore', 'quantumg']}
+
+    agentSupervisorSettings: dict = {'hiveCommunityId': 'hive-174695', 'hiveCommunityTag': 'letsmakeacollage'}
+
+    violationReporterSettings: dict = {'settingsByLevel': {
+        SuspiciousActivityLevel.WARNING: {'discordTargetChatroom': 912062389736853504},
+        SuspiciousActivityLevel.VIOLATION: {'discordTargetChatroom': 912062389736853504},
+        SuspiciousActivityLevel.CONVICTION_DETECTED: {'discordTargetChatroom': 903160211508985896}
+    }}
