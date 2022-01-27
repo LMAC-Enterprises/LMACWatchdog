@@ -1,7 +1,9 @@
 import re
 from abc import ABC
+from typing import Tuple
 
-from inputOutput.HiveNetwork import HiveComment
+from actionSystem.ActionHandling import PolicyAction
+from services.HiveNetwork import HiveComment
 from monitoringSystem.MonitoringAgency import Agent
 from reportingSystem.Reporting import SuspiciousActivityReport, SuspiciousActivityLevel
 
@@ -24,7 +26,7 @@ class SourceBlacklistAgent(Agent, ABC):
             urls.append(urlMatch[0])
         return urls
 
-    def onSuspicionQuery(self, post: HiveComment) -> SuspiciousActivityReport:
+    def onSuspicionQuery(self, post: HiveComment) -> Tuple[SuspiciousActivityReport, PolicyAction]:
 
         urls = self._getAllUrls(post.body)
         unwantedUrlsFound = []
@@ -40,17 +42,12 @@ class SourceBlacklistAgent(Agent, ABC):
                 post.author,
                 post.permlink,
                 self._agentId,
-                SuspiciousActivityLevel.RULE_BREAKER,
-                '{urlsCount} blacklisted urls found.; Urls: {unwantedUrls}'.format(
+                SuspiciousActivityLevel.VIOLATION,
+                'Found {urlsCount} blacklisted urls in this post.\nUrls:\n{unwantedUrls}'.format(
                     urlsCount=len(unwantedUrlsFound),
                     unwantedUrls=unwantedUrlsFound
                 )
-            )
+            ),
+            None
 
-        return SuspiciousActivityReport(
-            post.author,
-            post.permlink,
-            self._agentId,
-            SuspiciousActivityLevel.UNSUSPICIOUS,
-            ''
-        )
+        return None, None
