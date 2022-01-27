@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
+from typing import Tuple, Callable
 
-from inputOutput.HiveNetwork import HiveHandler, HiveComment
-from reportingSystem.Reporting import SuspiciousActivityReport, SuspiciousActivityLevel
+from actionSystem.ActionHandling import PolicyAction, PolicyActionSupervisor
+from services.HiveNetwork import HiveHandler, HiveComment
+from reportingSystem.Reporting import SuspiciousActivityReport, ReportDispatcher
 
 
 class Agent(ABC):
@@ -15,7 +17,7 @@ class Agent(ABC):
         pass
 
     @abstractmethod
-    def onSuspicionQuery(self, post: HiveComment) -> SuspiciousActivityReport:
+    def onSuspicionQuery(self, post: HiveComment) -> Tuple[SuspiciousActivityReport, PolicyAction]:
         pass
 
 
@@ -25,7 +27,9 @@ class AgentSupervisor:
     _hiveCommunityTag: str
     _hiveHandler: HiveHandler
 
-    def __init__(self, hiveCommunityId: str, hiveCommunityTag, agentsInfo: dict):
+    def __init__(self, hiveCommunityId: str, hiveCommunityTag, agentsInfo: dict,
+                 policyActionSupervisor: PolicyActionSupervisor, reportDispatcher: ReportDispatcher,
+                 progressCallback: Callable[[str], None]):
         self._agents = []
 
         for agentClass in agentsInfo.keys():
@@ -38,18 +42,29 @@ class AgentSupervisor:
         self._hiveHandler = HiveHandler()
         self._hiveHandler.addOnPostLoadedHandler(self.onHivePostLoaded)
         self._reports = []
+        self._policyActionSupervisor = policyActionSupervisor
+        self._reportDispatcher = reportDispatcher
+        self._progressCallback = progressCallback
 
     def onHivePostLoaded(self, post: HiveComment):
         for agent in self._agents:
-            suspiciousActivityReport = agent.onSuspicionQuery(post)
-            if suspiciousActivityReport.activityLevel == SuspiciousActivityLevel.UNSUSPICIOUS:
-                continue
-
-            self._reports.append(suspiciousActivityReport)
+            suspiciousActivityReport, action = agent.onSuspicionQuery(post)
+            if suspiciousActivityReport is not None:
+                self._reportDispatcher.handOverReport(suspiciousActivityReport)
+            if action is not None:
+                self._policyActionSupervisor.suggestAction(action)
 
     def startSearching(self):
+        self._reportProgress('Monitoring new Hive posts...')
         if not self._hiveHandler.loadNewestCommunityPosts(self._hiveCommunityId, self._hiveCommunityTag):
             raise IOError('Hive connection error.')
 
-    def getReports(self) -> list:
-        return self._reports
+    def finishMonitoringCycle(self):
+        self._reportProgress('Promoting reports...')
+        self._reportDispatcher.promoteReports()
+        self._reportProgress('Processing actions...')
+        self._policyActionSupervisor.processActions()
+        self._reportProgress('Finished monitoring!')
+
+    def _reportProgress(self, reachedTheTask: str):
+        self._progressCallback(reachedTheTask)
