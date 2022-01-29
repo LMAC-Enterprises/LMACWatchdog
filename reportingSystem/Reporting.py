@@ -13,10 +13,10 @@ class SuspiciousActivityReport:
     _author: str
     _permlink: str
     _agentId: str
-    _activityLevel: SuspiciousActivityLevel
+    _activityLevel: int
     _description: str
 
-    def __init__(self, author: str, permlink: str, agentId: str, activityLevel: SuspiciousActivityLevel,
+    def __init__(self, author: str, permlink: str, agentId: str, activityLevel: int,
                  description: str):
         self._author = author
         self._permlink = permlink
@@ -37,7 +37,7 @@ class SuspiciousActivityReport:
         return self._agentId
 
     @property
-    def activityLevel(self) -> SuspiciousActivityLevel:
+    def activityLevel(self) -> int:
         return self._activityLevel
 
     @property
@@ -59,6 +59,8 @@ class ReportDispatcher:
     _reporters: list
     _reports: list
 
+    MERGED_AGENT_ID = 'Multiple agents'
+
     def __init__(self, reportersInfo: dict):
         self._reporters = []
         self._reports = []
@@ -71,7 +73,39 @@ class ReportDispatcher:
     def handOverReport(self, report: SuspiciousActivityReport):
         self._reports.append(report)
 
+    def _unifyReports(self):
+        unifiedReports = []
+        hiveLinkKeyedReports = {}
+
+        for report in self._reports:
+            hiveLink = '@{author}/{permlink}'.format(author=report.author, permlink=report.permlink)
+            if hiveLink not in hiveLinkKeyedReports.keys():
+                hiveLinkKeyedReports[hiveLink] = report
+                continue
+
+            baseReport = hiveLinkKeyedReports[hiveLink]
+
+            if baseReport.activityLevel < report.activityLevel:
+                baseReport.activityLevel = report.activityLevel
+
+            baseReport.description = '{baseReport}\n{additionalReport}'.format(
+                baseReport=baseReport,
+                additionalReport=report
+            )
+            baseReport.agentId = '{baseReportAgentIds}, {additionalReportAgentIds}'.format(
+                baseReportAgentIds=baseReport.agentId,
+                additionalReportAgentIds=report.agentId
+            )
+
+        for hiveLink in hiveLinkKeyedReports.keys():
+            report = hiveLinkKeyedReports[hiveLink]
+            if ',' in report.agentId:
+                report.agentId = 'Collaborated:' + report.agentId
+
+        return hiveLinkKeyedReports.values()
+
     def promoteReports(self):
+        self._unifyReports()
         for report in self._reports:
             for reporter in self._reporters:
                 reporter.onNewReportAvailable(report)
