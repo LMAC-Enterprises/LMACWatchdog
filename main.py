@@ -2,7 +2,7 @@ import argparse
 
 from Configuration import Configuration
 from actionSystem.ActionHandling import PolicyActionSupervisor
-from monitoringSystem.agents import LMACBeneficiaryAgent, SourceBlacklistAgent, SuspectHunterAgent
+from monitoringSystem.agents import LMACBeneficiaryAgent, SourceBlacklistAgent, SuspectHunterAgent, LILBeneficiaryAgent
 from monitoringSystem.MonitoringAgency import AgentSupervisor
 from reportingSystem.Reporting import ReportDispatcher
 from reportingSystem.reporters import LogReporter, DiscordReporters
@@ -13,6 +13,7 @@ from services.Registry import RegistryHandler
 EXITCODE_OK: int = 0
 EXITCODE_ERROR: int = 1
 
+# LAST RUNTIME TIMECODE: 1643454930
 
 def _onAgentSupervisorProgress(reachedTask: str):
     print(reachedTask)
@@ -51,6 +52,7 @@ def main(arguments: dict) -> int:
         Configuration.agentSupervisorSettings['hiveCommunityId'],
         Configuration.agentSupervisorSettings['hiveCommunityTag'], {
             LMACBeneficiaryAgent.LMACBeneficiaryAgent: Configuration.lmacBeneficiaryAgentRules,
+            LILBeneficiaryAgent.LILBeneficiaryAgent: Configuration.lilBeneficiaryAgentRules,
             SourceBlacklistAgent.SourceBlacklistAgent: Configuration.sourceBlacklistAgentRules,
             SuspectHunterAgent.SuspectHunterAgent: Configuration.suspectHunterAgentRules,
         },
@@ -70,7 +72,7 @@ def main(arguments: dict) -> int:
     registryHandler.saveAll()
 
     discordDispatcher = DiscordDispatcher()
-    discordDispatcher.processMessages(arguments['discordToken'])
+    discordDispatcher.runDiscordTasks(arguments['discordToken'])
 
     return EXITCODE_OK
 
@@ -92,7 +94,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '-initialize',
-        help='Local wallet password. -discordToken [TOKEN]',
+        help='Discord access token. -discordToken [TOKEN]',
         required=False
     )
 
