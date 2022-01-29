@@ -24,6 +24,7 @@ class Configuration:
     }
 
     lmacBeneficiaryAgentRules: dict = {'minimumBenefication': 2000, 'requiredBeneficiary': 'lmac'}
+    lilBeneficiaryAgentRules: dict = {'lilBeneficiaryWeight': 200}
 
     suspectHunterAgentRules: dict = {
         'downvoterIndicators': ['spaminator', 'theycallmedan', 'shaka', 'mballesteros', 'agmoore', 'quantumg']}
@@ -33,5 +34,5 @@ class Configuration:
     violationReporterSettings: dict = {'settingsByLevel': {
         SuspiciousActivityLevel.WARNING: {'discordTargetChatroom': 912062389736853504},
         SuspiciousActivityLevel.VIOLATION: {'discordTargetChatroom': 912062389736853504},
-        SuspiciousActivityLevel.CONVICTION_DETECTED: {'discordTargetChatroom': 903160211508985896}
+        SuspiciousActivityLevel.CONVICTION_DETECTED: {'discordTargetChatroom': 912062389736853504}
     }}
