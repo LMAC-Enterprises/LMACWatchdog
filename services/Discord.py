@@ -30,14 +30,14 @@ class DiscordMessageTransponder(discord.Client):
         print(self._messages)
         print(kwargs)
         # start the task to run in the background
-        self.my_background_task.start()
+        self._sendMessagesTask.start()
 
     async def on_ready(self):
         print(f'Logged in as {self.user} (ID: {self.user.id})')
         print('------')
 
     @tasks.loop(seconds=5)
-    async def my_background_task(self):
+    async def _sendMessagesTask(self):
         nextMessage: DiscordMessage = None
         try:
             nextMessage = self._messages.pop(0)
@@ -48,8 +48,8 @@ class DiscordMessageTransponder(discord.Client):
         channel = self.get_channel(nextMessage.channelId)
         await channel.send(nextMessage.message)
 
-    @my_background_task.before_loop
-    async def before_my_task(self):
+    @_sendMessagesTask.before_loop
+    async def _beforeSendMessagesTask(self):
         await self.wait_until_ready()
 
 
@@ -66,12 +66,13 @@ class DiscordDispatcher:
         return cls._instance
 
     def enqueueMessage(self, message: str):
-        print(message)
         self._messageQueue.append(DiscordMessage(message, self._channelId))
 
     def enterChatroom(self, channelId: int):
         self._channelId = channelId
 
-    def processMessages(self, discordToken):
+    def runDiscordTasks(self, discordToken: str):
+        if len(self._messageQueue) == 0:
+            return
         transponder = DiscordMessageTransponder(messages=self._messageQueue)
         transponder.run(discordToken)
