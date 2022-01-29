@@ -42,7 +42,8 @@ class LMACBeneficiaryAgent(Agent, ABC):
                     post.permlink,
                     self._agentId,
                     SuspiciousActivityLevel.WARNING,
-                    'Insufficient beneficiary weight set for @{requiredBeneficiary}.'.format(requiredBeneficiary=self._requiredBeneficiary)
+                    'Insufficient beneficiary weight set for @{requiredBeneficiary}.'.format(
+                        requiredBeneficiary=self._requiredBeneficiary)
                 ), None
         else:
             return SuspiciousActivityReport(
