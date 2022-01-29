@@ -2,7 +2,8 @@ import argparse
 
 from Configuration import Configuration
 from actionSystem.ActionHandling import PolicyActionSupervisor
-from monitoringSystem.agents import LMACBeneficiaryAgent, SourceBlacklistAgent, SuspectHunterAgent, LILBeneficiaryAgent
+from monitoringSystem.agents import LMACBeneficiaryAgent, SourceBlacklistAgent, SuspectHunterAgent, \
+    LILBeneficiaryAgent, BadWordsAgent
 from monitoringSystem.MonitoringAgency import AgentSupervisor
 from reportingSystem.Reporting import ReportDispatcher
 from reportingSystem.reporters import LogReporter, DiscordReporters
@@ -12,6 +13,7 @@ from services.Registry import RegistryHandler
 
 EXITCODE_OK: int = 0
 EXITCODE_ERROR: int = 1
+
 
 # LAST RUNTIME TIMECODE: 1643454930
 
@@ -41,9 +43,9 @@ def main(arguments: dict) -> int:
     registryHandler = RegistryHandler()
 
     reportDispatcher = ReportDispatcher({
-            DiscordReporters.ViolationReporter: Configuration.violationReporterSettings,
-            LogReporter.LogReporter: {}
-        }
+        DiscordReporters.ViolationReporter: Configuration.violationReporterSettings,
+        LogReporter.LogReporter: {}
+    }
     )
 
     policyActionSupervisor = PolicyActionSupervisor({})
@@ -55,6 +57,7 @@ def main(arguments: dict) -> int:
             LILBeneficiaryAgent.LILBeneficiaryAgent: Configuration.lilBeneficiaryAgentRules,
             SourceBlacklistAgent.SourceBlacklistAgent: Configuration.sourceBlacklistAgentRules,
             SuspectHunterAgent.SuspectHunterAgent: Configuration.suspectHunterAgentRules,
+            BadWordsAgent.BadWordsAgent: Configuration.badWordsAgentRules,
         },
         policyActionSupervisor,
         reportDispatcher,

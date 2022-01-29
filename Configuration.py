@@ -26,6 +26,13 @@ class Configuration:
     lmacBeneficiaryAgentRules: dict = {'minimumBenefication': 2000, 'requiredBeneficiary': 'lmac'}
     lilBeneficiaryAgentRules: dict = {'lilBeneficiaryWeight': 200}
 
+    badWordsAgentRules: dict = {
+        'badWords': [
+            'asshole', 'scumbag', 'motherfucker', 'bitch', 'bastard', 'cunt', 'pussy', 'arsehole', 'cocksucker',
+            'dickhead', 'fuck you', 'jerk', 'slut', 'wanker', 'whore', 'dumbass'
+        ]
+    }
+
     suspectHunterAgentRules: dict = {
         'downvoterIndicators': ['spaminator', 'theycallmedan', 'shaka', 'mballesteros', 'agmoore', 'quantumg']}
 
