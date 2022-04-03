@@ -12,7 +12,7 @@ class LMACBeneficiaryAgent(Agent, ABC):
     _requiredBeneficiary: str
 
     def __init__(self):
-        super().__init__(self.__class__.__name__)
+        super().__init__('LMAC Beneficiary Agent')
         self._minimumBenefication = 0
         self._requiredBeneficiary = ''
 
