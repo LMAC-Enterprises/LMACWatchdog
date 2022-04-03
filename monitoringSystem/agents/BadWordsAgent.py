@@ -1,4 +1,4 @@
-import re
+import nltk
 from abc import ABC
 from typing import Tuple
 
@@ -19,10 +19,10 @@ class BadWordsAgent(Agent, ABC):
         self._badWords = rules['badWords']
 
     def _findBadWords(self, text: str):
-        text = text.lower()
+        words = nltk.word_tokenize(text.lower())
         foundBadWords = []
         for badWord in self._badWords:
-            if badWord not in text:
+            if badWord not in words:
                 continue
             foundBadWords.append(badWord)
 
@@ -42,7 +42,6 @@ class BadWordsAgent(Agent, ABC):
                     badWordsCount=len(badWordsFound),
                     badWords='\n'.join(badWordsFound)
                 )
-            ),
-            None
+            ), None
 
         return None, None

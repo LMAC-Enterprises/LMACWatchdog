@@ -12,14 +12,14 @@ class LILBeneficiaryAgent(Agent, ABC):
     _lilBeneficiaryWeight: int
 
     def __init__(self):
-        super().__init__(self.__class__.__name__)
+        super().__init__('LIL Beneficiary Agent')
         self._lilBeneficiaryWeight = 200
         self._urlRegex = re.compile(r'https:\/\/lmac.gallery\/lil-gallery-image\/\d+', re.DOTALL)
 
     def onSetupRules(self, rules: dict):
         self._lilBeneficiaryWeight = rules['lilBeneficiaryWeight']
 
-    def _getAllUrls(self, text: str):
+    def _getAllLILUrls(self, text: str):
         urlMatches = re.findall(self._urlRegex, text)
         urls = []
         for urlMatch in urlMatches:
@@ -28,16 +28,9 @@ class LILBeneficiaryAgent(Agent, ABC):
 
     def onSuspicionQuery(self, post: HiveComment) -> Tuple[SuspiciousActivityReport, PolicyAction]:
 
-        urls = self._getAllUrls(post.body)
-        lilUrlsFound = []
-        for url in urls:
-            for blacklistRegex in self._blacklist:
-                if not re.search(blacklistRegex, url):
-                    continue
+        lilUrlsFound = self._getAllLILUrls(post.body)
 
-                lilUrlsFound.append(url)
-
-        if len(lilUrlsFound) > 0 and self._lilBeneficiaryWeight not in self._post.cachedBeneficiaries:
+        if len(lilUrlsFound) > 0 and self._lilBeneficiaryWeight not in post.cachedBeneficiaries.values():
             return SuspiciousActivityReport(
                 post.author,
                 post.permlink,
@@ -47,7 +40,6 @@ class LILBeneficiaryAgent(Agent, ABC):
                     urlsCount=len(lilUrlsFound),
                     lilUrls='\n'.join(lilUrlsFound)
                 )
-            ),
-            None
+            ),  None
 
         return None, None

@@ -10,7 +10,7 @@ class LogAspect:
         self._logger.setLevel(logLevel)
         logFileHandler = logging.FileHandler(aspect + '.log')
         logFileHandler.setLevel(logLevel)
-        logFileHandler.setFormatter(logging.Formatter(logFormat))
+        logFileHandler.setFormatter(logging.Formatter(fmt=logFormat, datefmt='%a %d %b %Y %H:%M:%S'))
         self._logger.addHandler(logFileHandler)
 
     def logger(self):
