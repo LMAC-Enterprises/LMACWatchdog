@@ -25,12 +25,41 @@ class HiveWallet:
 
     @staticmethod
     def unlock(walletPassword: str):
-        hive = Hive()
+        hiveWallet = HiveWallet()
         try:
-            hive.wallet.unlock(walletPassword)
+            hiveWallet.hive.wallet.unlock(walletPassword)
         except beemstorage.exceptions.WalletLocked:
-            return False
-        return hive.wallet.unlocked()
+            return None
+
+        return hiveWallet
+
+    def __init__(self):
+        self._hive = Hive()
+
+    @property
+    def hive(self) -> Hive:
+        return self._hive
+
+    def submitComment(self, toAuthor: str, toPermlink: str, message: str) -> bool:
+        comment = Comment('@{author}/{permlink}'.format(author=toAuthor, permlink=toPermlink), blockchain_instance=self._hive)
+        comment.reply(message)
+
+
+class QueuedHiveMessage:
+    _toAuthor: str
+    _topPermlink: str
+    _message: str
+
+    def __init__(self, toPermlink: str, toAuthor: str, message: str):
+        self._toAuthor = toAuthor
+        self._toPermlink = toPermlink
+        self._message = message
+
+    def submit(self, wallet: HiveWallet):
+        wallet.submitComment(self._toAuthor, self._toPermlink, self._message)
+
+    def __str__(self):
+        return 'Author: {author}\nPermlink: {permlink}\n\n{message}'.format(author=self._toAuthor, permlink=self._toPermlink, message=self._message)
 
 
 class HiveComment(Comment):
@@ -84,12 +113,14 @@ class HiveHandler:
     _instance = None
     _hiveWalletPassword: str
     _onPostLoadedHandlers: list
+    _queuedMessages: list
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(HiveHandler, cls).__new__(cls)
             cls._hiveWalletPassword = ''
             cls._onPostLoadedHandlers = []
+            cls._queuedMessages = []
 
         return cls._instance
 
@@ -123,5 +154,18 @@ class HiveHandler:
             registryHandler.setProperty(self.__class__.__name__, 'previousNewestPostTimestamp', newestPostTimestamp)
         except OfflineHasNoRPCException as e:
             return False
+
+        return True
+
+    def enqueueMessage(self, author: str, permlink: str, message: str):
+        hiveMessage = QueuedHiveMessage(permlink, author, message)
+        self._queuedMessages.append(hiveMessage)
+
+    def processNextQueuedMessages(self) -> bool:
+        hiveMessage: QueuedHiveMessage = self._queuedMessages.pop()
+        if not hiveMessage:
+            return False
+        print(str(hiveMessage))
+        # hiveMessage.submit(self._hiveWallet)
 
         return True
