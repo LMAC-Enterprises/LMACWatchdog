@@ -47,7 +47,6 @@ class SourceBlacklistAgent(Agent, ABC):
                     urlsCount=len(unwantedUrlsFound),
                     unwantedUrls=unwantedUrlsFound
                 )
-            ),
-            None
+            ), None
 
         return None, None
