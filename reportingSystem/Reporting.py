@@ -2,11 +2,12 @@ from abc import ABC, abstractmethod
 from enum import Enum
 
 
-class SuspiciousActivityLevel(Enum):
+class SuspiciousActivityLevel:
     WARNING: int = 1
     VIOLATION: int = 2
     ALERT: int = 3
     CONVICTION_DETECTED: int = 4
+    SPAMMING: int = 5
 
 
 class SuspiciousActivityReport:
@@ -36,13 +37,25 @@ class SuspiciousActivityReport:
     def agentId(self) -> str:
         return self._agentId
 
+    @agentId.setter
+    def agentId(self, agent):
+        self._agentId = agent
+
     @property
     def activityLevel(self) -> int:
         return self._activityLevel
 
+    @activityLevel.setter
+    def activityLevel(self, level: int):
+        self._activityLevel = level
+
     @property
     def description(self) -> str:
         return self._description
+
+    @description.setter
+    def description(self, text):
+        self._description = text
 
 
 class Reporter(ABC):
@@ -89,8 +102,8 @@ class ReportDispatcher:
                 baseReport.activityLevel = report.activityLevel
 
             baseReport.description = '{baseReport}\n{additionalReport}'.format(
-                baseReport=baseReport,
-                additionalReport=report
+                baseReport=baseReport.description,
+                additionalReport=report.description
             )
             baseReport.agentId = '{baseReportAgentIds}, {additionalReportAgentIds}'.format(
                 baseReportAgentIds=baseReport.agentId,
