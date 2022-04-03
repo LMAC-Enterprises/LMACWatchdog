@@ -1,7 +1,10 @@
+from BaseConfiguration import BaseConfiguration
 from reportingSystem.Reporting import SuspiciousActivityLevel
 
 
-class Configuration:
+class Configuration(BaseConfiguration):
+    exceptAuthors: list = ['shaka']
+
     sourceBlacklistAgentRules: dict = {
         'blacklist': [
             r'^(?:http|https)\:\/\/stock\.adobe\.com\/.+',
