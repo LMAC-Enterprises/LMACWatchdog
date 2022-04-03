@@ -26,6 +26,7 @@ class AgentSupervisor:
     _hiveCommunityId: str
     _hiveCommunityTag: str
     _hiveHandler: HiveHandler
+    _exceptAuthors: list
 
     def __init__(self, hiveCommunityId: str, hiveCommunityTag, agentsInfo: dict,
                  policyActionSupervisor: PolicyActionSupervisor, reportDispatcher: ReportDispatcher,
@@ -45,10 +46,26 @@ class AgentSupervisor:
         self._policyActionSupervisor = policyActionSupervisor
         self._reportDispatcher = reportDispatcher
         self._progressCallback = progressCallback
+        self._exceptAuthors = []
+
+    @property
+    def exceptAuthors(self) -> list:
+        return self._exceptAuthors
+
+    @exceptAuthors.setter
+    def exceptAuthors(self, authors: list):
+        self._exceptAuthors = authors
 
     def onHivePostLoaded(self, post: HiveComment):
+        if post.author in self.exceptAuthors:
+            return
+
         for agent in self._agents:
+            print(agent._agentId)
             suspiciousActivityReport, action = agent.onSuspicionQuery(post)
+            print(action)
+            print(suspiciousActivityReport)
+            print("--_")
             if suspiciousActivityReport is not None:
                 self._reportDispatcher.handOverReport(suspiciousActivityReport)
             if action is not None:
