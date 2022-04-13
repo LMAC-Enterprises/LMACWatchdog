@@ -4,7 +4,7 @@ import logging
 class LogAspect:
     _logger: logging.Logger
 
-    def __init__(self, aspect: str, logFormat: str, logLevel: int):
+    def __init__(self, aspect: str, logFormat: str = ' %(name)s :: %(levelname)-8s :: %(message)s', logLevel: int = logging.INFO):
         self._logger = logging.getLogger(aspect)
 
         self._logger.setLevel(logLevel)

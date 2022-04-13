@@ -1,21 +1,20 @@
 from abc import ABC, abstractmethod
 
-
 class PolicyAction(ABC):
     @abstractmethod
-    def onActionRequest(self, actionParameters: dict):
+    def onActionRequest(self):
         pass
 
 
 class PolicyActionSupervisor:
-    def __init__(self, actionsInfo: dict):
+    _suggestedActions: list
+
+    def __init__(self):
         self._suggestedActions = []
 
-    def triggerAction(self, actionId: str):
-        pass
-
     def processActions(self):
-        pass
+        for suggestedAction in self._suggestedActions:
+            suggestedAction.onActionRequest()
 
     def suggestAction(self, action: PolicyAction):
         self._suggestedActions.append(action)

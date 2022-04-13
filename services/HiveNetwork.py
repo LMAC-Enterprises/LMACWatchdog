@@ -3,6 +3,7 @@ import json
 import beemstorage
 from beem import Hive
 from beem.comment import Comment
+from beem.community import Community
 from beem.discussions import Discussions_by_created, Query
 from beem.exceptions import OfflineHasNoRPCException
 
@@ -24,8 +25,8 @@ class HiveWallet:
         return True
 
     @staticmethod
-    def unlock(walletPassword: str):
-        hiveWallet = HiveWallet()
+    def unlock(walletPassword: str, username: str, community: str):
+        hiveWallet = HiveWallet(username, community)
         try:
             hiveWallet.hive.wallet.unlock(walletPassword)
         except beemstorage.exceptions.WalletLocked:
@@ -33,8 +34,10 @@ class HiveWallet:
 
         return hiveWallet
 
-    def __init__(self):
+    def __init__(self, username, community):
         self._hive = Hive()
+        self._hiveCommunity = Community(community, blockchain_instance=self._hive)
+        self._username = username
 
     @property
     def hive(self) -> Hive:
@@ -42,7 +45,10 @@ class HiveWallet:
 
     def submitComment(self, toAuthor: str, toPermlink: str, message: str) -> bool:
         comment = Comment('@{author}/{permlink}'.format(author=toAuthor, permlink=toPermlink), blockchain_instance=self._hive)
-        comment.reply(message)
+        comment.reply(message, author=self._username)
+
+    def muteInCommunity(self, comment: Comment, reason: str):
+        self._hiveCommunity.mute_post(comment.author, comment.permlink, reason, self._username)
 
 
 class QueuedHiveMessage:
@@ -109,23 +115,42 @@ class HiveComment(Comment):
         return self._cachedTags
 
 
+class QueuedPostToMute:
+    _hiveComment: HiveComment
+    _reason: str
+
+    def __init__(self, comment: HiveComment, reason: str):
+        self._hiveComment = comment
+        self._reason = reason
+
+    @property
+    def comment(self) -> HiveComment:
+        return self._hiveComment
+
+    @property
+    def reason(self) -> str:
+        return self._reason
+
+
 class HiveHandler:
     _instance = None
-    _hiveWalletPassword: str
+    _hiveWallet: HiveWallet
     _onPostLoadedHandlers: list
     _queuedMessages: list
+    _muteQueue: list
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(HiveHandler, cls).__new__(cls)
-            cls._hiveWalletPassword = ''
+            cls._hiveWallet = None
             cls._onPostLoadedHandlers = []
             cls._queuedMessages = []
+            cls._muteQueue = []
 
         return cls._instance
 
-    def setup(self, hiveWalletPassword):
-        self._hiveWalletPassword = hiveWalletPassword
+    def setup(self, hiveWallet: HiveWallet):
+        self._hiveWallet = hiveWallet
 
     def addOnPostLoadedHandler(self, handlerCallback):
         self._onPostLoadedHandlers.append(handlerCallback)
@@ -157,15 +182,32 @@ class HiveHandler:
 
         return True
 
+    def enqueuePostToMuteInCommunity(self, hiveComment: HiveComment, reason: str):
+        self._muteQueue.append(QueuedPostToMute(hiveComment, reason))
+
     def enqueueMessage(self, author: str, permlink: str, message: str):
         hiveMessage = QueuedHiveMessage(permlink, author, message)
         self._queuedMessages.append(hiveMessage)
 
     def processNextQueuedMessages(self) -> bool:
+        if len(self._queuedMessages) == 0:
+            return False
         hiveMessage: QueuedHiveMessage = self._queuedMessages.pop()
         if not hiveMessage:
             return False
-        print(str(hiveMessage))
-        # hiveMessage.submit(self._hiveWallet)
+        print('Send hive post: ' + str(hiveMessage))
+        hiveMessage.submit(self._hiveWallet)
 
         return True
+
+    def muteNextQueuedPosts(self) -> bool:
+        if len(self._muteQueue) == 0:
+            return False
+        queuedPostToMute: QueuedPostToMute = self._muteQueue.pop()
+        if not queuedPostToMute:
+            return False
+        print('Mute hive post: {author}/{permlink}'.format(author=queuedPostToMute.comment.author, permlink=queuedPostToMute.comment.permlink))
+        self._hiveWallet.muteInCommunity(queuedPostToMute.comment, queuedPostToMute.reason)
+
+        return True
+

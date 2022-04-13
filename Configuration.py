@@ -3,7 +3,10 @@ from reportingSystem.Reporting import SuspiciousActivityLevel
 
 
 class Configuration(BaseConfiguration):
-    exceptAuthors: list = ['shaka']
+    hiveCommunityId: str = 'hive-174695'
+    exceptAuthors: list = ['shaka', 'agmoore', 'mballesteros', 'quantumg', 'lilybee']
+    delayBetweenSendingHiveComments: float = 5.0  # Seconds
+    delayBetweenMutingHiveComments: float = 5.0  # Seconds
 
     sourceBlacklistAgentRules: dict = {
         'blacklist': [
@@ -46,3 +49,8 @@ class Configuration(BaseConfiguration):
         SuspiciousActivityLevel.VIOLATION: {'discordTargetChatroom': 912062389736853504},
         SuspiciousActivityLevel.CONVICTION_DETECTED: {'discordTargetChatroom': 912062389736853504}
     }}
+
+    contestLinkAgentRules: dict = {
+        'moderators': ['shaka', 'agmoore', 'mballesteros', 'quantumg', 'lilybee'],
+        'mandatoryContestHashtag': 'letsmakeacollage'
+    }

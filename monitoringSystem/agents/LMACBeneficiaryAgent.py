@@ -2,6 +2,7 @@ from abc import ABC
 from typing import Tuple
 
 from actionSystem.ActionHandling import PolicyAction
+from actionSystem.actions.MuteHivePostAction import MuteHivePostAction
 from services.HiveNetwork import HiveComment
 from monitoringSystem.MonitoringAgency import Agent
 from reportingSystem.Reporting import SuspiciousActivityReport, SuspiciousActivityLevel
@@ -33,7 +34,7 @@ class LMACBeneficiaryAgent(Agent, ABC):
                 SuspiciousActivityLevel.WARNING,
                 'iMac typo in "@{requiredBeneficiary}" beneficiary.'.format(
                     requiredBeneficiary=self._requiredBeneficiary)
-            ), None
+            ), MuteHivePostAction(post, 'Use of non-compliant image sources.')
 
         if self._requiredBeneficiary in post.cachedBeneficiaries.keys():
             if post.cachedBeneficiaries[self._requiredBeneficiary] < self._minimumBenefication:
@@ -44,7 +45,7 @@ class LMACBeneficiaryAgent(Agent, ABC):
                     SuspiciousActivityLevel.WARNING,
                     'Insufficient beneficiary weight set for @{requiredBeneficiary}.'.format(
                         requiredBeneficiary=self._requiredBeneficiary)
-                ), None
+                ), MuteHivePostAction(post, 'Use of non-compliant image sources.')
         else:
             return SuspiciousActivityReport(
                 post.author,
@@ -52,6 +53,6 @@ class LMACBeneficiaryAgent(Agent, ABC):
                 self._agentId,
                 SuspiciousActivityLevel.WARNING,
                 'Beneficiary not set for @{requiredBeneficiary}.'.format(requiredBeneficiary=self._requiredBeneficiary)
-            ), None
+            ), MuteHivePostAction(post, 'Use of non-compliant image sources.')
 
         return None, None

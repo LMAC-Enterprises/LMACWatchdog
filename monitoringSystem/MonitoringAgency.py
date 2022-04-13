@@ -61,11 +61,8 @@ class AgentSupervisor:
             return
 
         for agent in self._agents:
-            print(agent._agentId)
             suspiciousActivityReport, action = agent.onSuspicionQuery(post)
-            print(action)
-            print(suspiciousActivityReport)
-            print("--_")
+
             if suspiciousActivityReport is not None:
                 self._reportDispatcher.handOverReport(suspiciousActivityReport)
             if action is not None:

@@ -1,55 +1,69 @@
 import argparse
+import time
 
 from Configuration import Configuration
 from actionSystem.ActionHandling import PolicyActionSupervisor
 from monitoringSystem.agents import LMACBeneficiaryAgent, SourceBlacklistAgent, SuspectHunterAgent, \
-    LILBeneficiaryAgent, BadWordsAgent
+    LILBeneficiaryAgent, BadWordsAgent, ContestLinkAgent
 from monitoringSystem.MonitoringAgency import AgentSupervisor
 from reportingSystem.Reporting import ReportDispatcher
-from reportingSystem.reporters import LogReporter, DiscordReporters
+from reportingSystem.reporters import LogReporter, DiscordReporters, HiveReporters
+from services.AspectLogging import LogAspect
 from services.Discord import DiscordDispatcher
-from services.HiveNetwork import HiveWallet
+from services.HiveNetwork import HiveWallet, HiveHandler
 from services.Registry import RegistryHandler
+from services.TemplateHandling import TemplateEngine
 
 EXITCODE_OK: int = 0
 EXITCODE_ERROR: int = 1
 
+verboseMode: bool = False
+mainLogger: LogAspect = LogAspect('WatchdogMain')
 
-# LAST RUNTIME TIMECODE: 1643454930
+
+# LAST RUNTIME TIME_CODE: 1643454930
+def logInfo(message: str):
+    if verboseMode:
+        print(message)
+    mainLogger.logger().info(message)
+
 
 def _onAgentSupervisorProgress(reachedTask: str):
-    print(reachedTask)
-
-
-def _initialize() -> int:
-    print('Create a new local wallet first.')
-    hiveWalletPassword = input('Password:')
-    hivePostingKey = input('Posting key:')
-    print('Initialisation finished!')
+    if verboseMode:
+        logInfo('Processing: {task}'.format(task=reachedTask))
 
 
 def main(arguments: dict) -> int:
-    if not arguments['initialize'] and not (
-            'discordToken' in arguments.keys() and 'walletPassword' in arguments.keys()):
+
+    # Unlock Hive wallet.
+    hiveWallet = HiveWallet.unlock(
+        Configuration.hiveWalletPassword, Configuration.hiveUser, Configuration.hiveCommunityId
+    )
+    if not hiveWallet:
+        logInfo('Error. Wrong wallet password.')
         return EXITCODE_ERROR
 
-    if arguments['initialize']:
-        return _initialize()
+    # Initialize HiveHandler singleton.
+    hiveHandler = HiveHandler()
+    hiveHandler.setup(hiveWallet)
 
-    if not HiveWallet.unlock(arguments['walletPassword']):
-        print('Error. Wrong wallet password.')
-        return EXITCODE_ERROR
-
+    # Initialize RegistryHandler.
     registryHandler = RegistryHandler()
 
+    # Initialize ReportDispatcher.
     reportDispatcher = ReportDispatcher({
-        DiscordReporters.ViolationReporter: Configuration.violationReporterSettings,
-        LogReporter.LogReporter: {}
-    }
+            DiscordReporters.ViolationReporter: Configuration.violationReporterSettings,
+            LogReporter.LogReporter: {},
+            HiveReporters.ContestLinkHiveReporter: {},
+            HiveReporters.LILBeneficiaryHiveReporter: {},
+            HiveReporters.LMACBeneficiaryHiveReporter: {}
+        }
     )
 
-    policyActionSupervisor = PolicyActionSupervisor({})
+    # Initialize PolicyActionSupervisor.
+    policyActionSupervisor = PolicyActionSupervisor()
 
+    # Initialize AgentSupervisor
     agentSupervisor = AgentSupervisor(
         Configuration.agentSupervisorSettings['hiveCommunityId'],
         Configuration.agentSupervisorSettings['hiveCommunityTag'], {
@@ -58,16 +72,20 @@ def main(arguments: dict) -> int:
             SourceBlacklistAgent.SourceBlacklistAgent: Configuration.sourceBlacklistAgentRules,
             SuspectHunterAgent.SuspectHunterAgent: Configuration.suspectHunterAgentRules,
             BadWordsAgent.BadWordsAgent: Configuration.badWordsAgentRules,
+            ContestLinkAgent.ContestLinkAgent: Configuration.contestLinkAgentRules
         },
         policyActionSupervisor,
         reportDispatcher,
         _onAgentSupervisorProgress
     )
 
+    agentSupervisor.exceptAuthors = Configuration.exceptAuthors
+
+    # Start supervising
     try:
         agentSupervisor.startSearching()
     except IOError:
-        print('Could not load Hive posts.')
+        logInfo('Could not load Hive posts.')
         return EXITCODE_ERROR
 
     agentSupervisor.finishMonitoringCycle()
@@ -75,7 +93,13 @@ def main(arguments: dict) -> int:
     registryHandler.saveAll()
 
     discordDispatcher = DiscordDispatcher()
-    discordDispatcher.runDiscordTasks(arguments['discordToken'])
+    discordDispatcher.runDiscordTasks(Configuration.discordToken)
+
+    while hiveHandler.processNextQueuedMessages():
+        time.sleep(Configuration.delayBetweenSendingHiveComments)
+
+    while hiveHandler.muteNextQueuedPosts():
+        time.sleep(Configuration.delayBetweenMutingHiveComments)
 
     return EXITCODE_OK
 
@@ -84,27 +108,19 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.description = 'Monitors a community for contributions that do not comply with the rules.'
     parser.add_argument(
-        '-discordToken',
-        type=str,
-        help='Discord token. -discordToken [TOKEN]',
+        '-verbose',
+        type=bool,
+        help='True for enabled verbose mode.',
         required=False
     )
-    parser.add_argument(
-        '-walletPassword',
-        type=str,
-        help='Local wallet password. -discordToken [TOKEN]',
-        required=False
-    )
-    parser.add_argument(
-        '-initialize',
-        help='Discord access token. -discordToken [TOKEN]',
-        required=False
-    )
+
+    args = parser.parse_args()
+    verboseMode = args.verbose
 
     exit(
         main(
             vars(
-                parser.parse_args()
+                args
             )
         )
     )

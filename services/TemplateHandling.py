@@ -1,4 +1,5 @@
 import glob
+from pathlib import Path
 
 
 class TemplateEngine:
@@ -23,14 +24,14 @@ class TemplateEngine:
             fileContent = self._loadTemplateFile(filePath)
             if not fileContent:
                 continue
-            self._templates[filename] = fileContent
+            self._templates[Path(filename).stem] = fileContent
 
     @staticmethod
     def _loadTemplateFile(filePath: str) -> str:
         contents = ''
         try:
             with open(filePath) as f:
-                contents = f.readlines()
+                contents = ''.join(f.readlines())
         except OSError:
             return None
 
@@ -40,7 +41,7 @@ class TemplateEngine:
         if templateFilename not in self._templates:
             return ''
 
-        return self._templates[templateFilename].format(**kwargs)
+        return self._templates['overallTemplate'].replace('{content}', self._templates[templateFilename]).format(**kwargs)
 
 
 

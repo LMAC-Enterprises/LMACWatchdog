@@ -3,6 +3,7 @@ from abc import ABC
 from typing import Tuple
 
 from actionSystem.ActionHandling import PolicyAction
+from actionSystem.actions.MuteHivePostAction import MuteHivePostAction
 from services.HiveNetwork import HiveComment
 from monitoringSystem.MonitoringAgency import Agent
 from reportingSystem.Reporting import SuspiciousActivityReport, SuspiciousActivityLevel
@@ -40,6 +41,6 @@ class LILBeneficiaryAgent(Agent, ABC):
                     urlsCount=len(lilUrlsFound),
                     lilUrls='\n'.join(lilUrlsFound)
                 )
-            ),  None
+            ), MuteHivePostAction(post, 'Use of non-compliant image sources.')
 
         return None, None
