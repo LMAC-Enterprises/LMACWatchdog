@@ -57,11 +57,14 @@ class DiscordDispatcher:
     _instance = None
     _messageQueue: list
     _channelId: int
+    _simulate: bool
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(DiscordDispatcher, cls).__new__(cls)
             cls._messageQueue = []
+            cls._simulate = False
+            cls._channelId = 0
 
         return cls._instance
 
@@ -72,7 +75,14 @@ class DiscordDispatcher:
         self._channelId = channelId
 
     def runDiscordTasks(self, discordToken: str):
+        if self._simulate:
+            print('Running discord tasks: {tasks}'.format(tasks=str(self._messageQueue)))
+            return
+
         if len(self._messageQueue) == 0:
             return
         transponder = DiscordMessageTransponder(messages=self._messageQueue)
         transponder.run(discordToken)
+
+    def setSimulationMode(self, simulate: bool):
+        self._simulate = simulate

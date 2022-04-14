@@ -138,6 +138,10 @@ class HiveHandler:
     _onPostLoadedHandlers: list
     _queuedMessages: list
     _muteQueue: list
+    _alreadyMutedPosts: list
+    _alreadyCommentedPosts: list
+    _registryHandler: RegistryHandler
+    _simulate: bool
 
     def __new__(cls):
         if cls._instance is None:
@@ -146,11 +150,16 @@ class HiveHandler:
             cls._onPostLoadedHandlers = []
             cls._queuedMessages = []
             cls._muteQueue = []
+            cls._alreadyMutedPosts = []
+            cls._alreadyCommentedPosts = []
+            cls._registryHandler = RegistryHandler()
+            cls._simulate = False
 
         return cls._instance
 
-    def setup(self, hiveWallet: HiveWallet):
+    def setup(self, hiveWallet: HiveWallet, simulate: bool):
         self._hiveWallet = hiveWallet
+        self._simulate = simulate
 
     def addOnPostLoadedHandler(self, handlerCallback):
         self._onPostLoadedHandlers.append(handlerCallback)
@@ -160,8 +169,7 @@ class HiveHandler:
             handler(post)
 
     def loadNewestCommunityPosts(self, hiveCommunityId: str, communityTag: str) -> bool:
-        registryHandler = RegistryHandler()
-        previousNewestPostTimestamp: int = registryHandler.getProperty(self.__class__.__name__,
+        previousNewestPostTimestamp: int = self._registryHandler.getProperty(self.__class__.__name__,
                                                                        'previousNewestPostTimestamp', 0)
 
         q = Query(limit=100, tag=communityTag)
@@ -176,18 +184,51 @@ class HiveHandler:
                 if post.category != hiveCommunityId:
                     continue
                 self._callOnPostLoadedHandlers(HiveComment.convert(post))
-            registryHandler.setProperty(self.__class__.__name__, 'previousNewestPostTimestamp', newestPostTimestamp)
+            self._registryHandler.setProperty(self.__class__.__name__, 'previousNewestPostTimestamp', newestPostTimestamp)
         except OfflineHasNoRPCException as e:
             return False
 
         return True
 
+    def _isPostAlreadyMuted(self, postLink: str) -> bool:
+        return postLink in self._alreadyMutedPosts
+
+    def _isPostAlreadyCommented(self, postLink: str) -> bool:
+        return postLink in self._alreadyCommentedPosts
+
+    def _markPostAsMuted(self, postLink: str):
+        self._alreadyMutedPosts.append(postLink)
+        if len(self._alreadyMutedPosts) > 100:
+            self._alreadyMutedPosts.pop()
+
+        self._registryHandler.setProperty(self.__class__.__name__, 'alreadyMutedPosts', self._alreadyMutedPosts)
+
+    def _markPostAsCommented(self, postLink: str):
+        self._alreadyCommentedPosts.append(postLink)
+        if len(self._alreadyCommentedPosts) > 100:
+            self._alreadyCommentedPosts.pop()
+
+        self._registryHandler.setProperty(self.__class__.__name__, 'alreadyCommentedPosts', self._alreadyCommentedPosts)
+
     def enqueuePostToMuteInCommunity(self, hiveComment: HiveComment, reason: str):
+        postLink: str = '@{author}/{permlink}'.format(author=hiveComment.author, permlink=hiveComment.permlink)
+        if self._isPostAlreadyMuted(postLink):
+            return
+
         self._muteQueue.append(QueuedPostToMute(hiveComment, reason))
 
+        self._markPostAsMuted(postLink)
+
     def enqueueMessage(self, author: str, permlink: str, message: str):
+        postLink: str = '@{author}/{permlink}'.format(author=author, permlink=permlink)
+
+        if self._isPostAlreadyCommented(postLink):
+            return
+
         hiveMessage = QueuedHiveMessage(permlink, author, message)
         self._queuedMessages.append(hiveMessage)
+
+        self._markPostAsCommented(postLink)
 
     def processNextQueuedMessages(self) -> bool:
         if len(self._queuedMessages) == 0:
@@ -195,8 +236,11 @@ class HiveHandler:
         hiveMessage: QueuedHiveMessage = self._queuedMessages.pop()
         if not hiveMessage:
             return False
-        print('Send hive post: ' + str(hiveMessage))
-        hiveMessage.submit(self._hiveWallet)
+
+        if self._simulate:
+            print('Send hive post: ' + str(hiveMessage))
+        else:
+            hiveMessage.submit(self._hiveWallet)
 
         return True
 
@@ -206,8 +250,10 @@ class HiveHandler:
         queuedPostToMute: QueuedPostToMute = self._muteQueue.pop()
         if not queuedPostToMute:
             return False
-        print('Mute hive post: {author}/{permlink}'.format(author=queuedPostToMute.comment.author, permlink=queuedPostToMute.comment.permlink))
-        self._hiveWallet.muteInCommunity(queuedPostToMute.comment, queuedPostToMute.reason)
+
+        if self._simulate:
+            print('Mute hive post: {author}/{permlink}'.format(author=queuedPostToMute.comment.author, permlink=queuedPostToMute.comment.permlink))
+        else:
+            self._hiveWallet.muteInCommunity(queuedPostToMute.comment, queuedPostToMute.reason)
 
         return True
-

@@ -12,7 +12,6 @@ from services.AspectLogging import LogAspect
 from services.Discord import DiscordDispatcher
 from services.HiveNetwork import HiveWallet, HiveHandler
 from services.Registry import RegistryHandler
-from services.TemplateHandling import TemplateEngine
 
 EXITCODE_OK: int = 0
 EXITCODE_ERROR: int = 1
@@ -34,6 +33,7 @@ def _onAgentSupervisorProgress(reachedTask: str):
 
 
 def main(arguments: dict) -> int:
+    simulate: bool = arguments['simulate']
 
     # Unlock Hive wallet.
     hiveWallet = HiveWallet.unlock(
@@ -45,10 +45,11 @@ def main(arguments: dict) -> int:
 
     # Initialize HiveHandler singleton.
     hiveHandler = HiveHandler()
-    hiveHandler.setup(hiveWallet)
+    hiveHandler.setup(hiveWallet, simulate)
 
     # Initialize RegistryHandler.
     registryHandler = RegistryHandler()
+    registryHandler.setSimulationMode(simulate)
 
     # Initialize ReportDispatcher.
     reportDispatcher = ReportDispatcher({
@@ -90,9 +91,8 @@ def main(arguments: dict) -> int:
 
     agentSupervisor.finishMonitoringCycle()
 
-    registryHandler.saveAll()
-
     discordDispatcher = DiscordDispatcher()
+    discordDispatcher.setSimulationMode(simulate)
     discordDispatcher.runDiscordTasks(Configuration.discordToken)
 
     while hiveHandler.processNextQueuedMessages():
@@ -100,6 +100,8 @@ def main(arguments: dict) -> int:
 
     while hiveHandler.muteNextQueuedPosts():
         time.sleep(Configuration.delayBetweenMutingHiveComments)
+
+    registryHandler.saveAll()
 
     return EXITCODE_OK
 
@@ -113,7 +115,12 @@ if __name__ == '__main__':
         help='True for enabled verbose mode.',
         required=False
     )
-
+    parser.add_argument(
+        '-simulate',
+        type=bool,
+        help='True for enabling the simulation mode. No messages will be sent, no action will be done.',
+        required=False
+    )
     args = parser.parse_args()
     verboseMode = args.verbose
 
