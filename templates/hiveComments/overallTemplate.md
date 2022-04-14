@@ -15,5 +15,5 @@ PS:
 I am Lily, a little bot. My job is to support the moderators on their job.
 
 But because I am brand new, I sometimes make mistakes. 
-If this comment was not justified, please let the moderators know. You can contact the team on Discord, or by replying to this comment and mentioning one of the moderators.
+If  you think  this comment was not justified please let the moderators know. You can contact the team on Discord, or by replying to this comment and mentioning one of the moderators.
 
