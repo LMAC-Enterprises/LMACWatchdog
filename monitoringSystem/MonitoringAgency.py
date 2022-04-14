@@ -27,6 +27,7 @@ class AgentSupervisor:
     _hiveCommunityTag: str
     _hiveHandler: HiveHandler
     _exceptAuthors: list
+    _monitoredPostsCount: int
 
     def __init__(self, hiveCommunityId: str, hiveCommunityTag, agentsInfo: dict,
                  policyActionSupervisor: PolicyActionSupervisor, reportDispatcher: ReportDispatcher,
@@ -38,6 +39,7 @@ class AgentSupervisor:
             agent.onSetupRules(agentsInfo[agentClass])
             self._agents.append(agent)
 
+        self._monitoredPostsCount = 0
         self._hiveCommunityId = hiveCommunityId
         self._hiveCommunityTag = hiveCommunityTag
         self._hiveHandler = HiveHandler()
@@ -60,6 +62,8 @@ class AgentSupervisor:
         if post.author in self.exceptAuthors:
             return
 
+        self._monitoredPostsCount += 1
+
         for agent in self._agents:
             suspiciousActivityReport, action = agent.onSuspicionQuery(post)
 
@@ -72,6 +76,7 @@ class AgentSupervisor:
         self._reportProgress('Monitoring new Hive posts...')
         if not self._hiveHandler.loadNewestCommunityPosts(self._hiveCommunityId, self._hiveCommunityTag):
             raise IOError('Hive connection error.')
+        self._reportProgress('Monitored {monitoredPosts} posts.'.format(monitoredPosts=self._monitoredPostsCount))
 
     def finishMonitoringCycle(self):
         self._reportProgress('Promoting reports...')
