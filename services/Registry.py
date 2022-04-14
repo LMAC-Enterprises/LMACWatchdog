@@ -5,6 +5,7 @@ class RegistryHandler:
     _realms: dict
     _dirty: bool
     _instance = None
+    _simulate: bool
 
     def __new__(cls):
         if cls._instance is None:
@@ -12,8 +13,12 @@ class RegistryHandler:
             cls._realms = {}
             cls._dirty = False
             cls._tryLoad(cls._instance)
+            cls._simulate = False
 
         return cls._instance
+
+    def setSimulationMode(self, simulate: bool):
+        self._simulate = simulate
 
     def setProperty(self, realm: str, propertyKey: str, propertyValue):
         if realm not in self._realms.keys():
@@ -42,6 +47,9 @@ class RegistryHandler:
             self._realms = data
 
     def saveAll(self):
+        if self._simulate:
+            return
+
         if not self._dirty:
             return
 
