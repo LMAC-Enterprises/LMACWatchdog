@@ -18,6 +18,9 @@ class DiscordMessage:
     def channelId(self):
         return self._channelId
 
+    def __str__(self):
+        return 'Discord message: {message}'.format(message=self._message)
+
 
 class DiscordMessageTransponder(discord.Client):
     _channelId: int
@@ -27,8 +30,6 @@ class DiscordMessageTransponder(discord.Client):
         super().__init__(*args, **kwargs)
 
         self._messages = kwargs['messages']
-        print(self._messages)
-        print(kwargs)
         # start the task to run in the background
         self._sendMessagesTask.start()
 
@@ -81,6 +82,7 @@ class DiscordDispatcher:
 
         if len(self._messageQueue) == 0:
             return
+
         transponder = DiscordMessageTransponder(messages=self._messageQueue)
         transponder.run(discordToken)
 
