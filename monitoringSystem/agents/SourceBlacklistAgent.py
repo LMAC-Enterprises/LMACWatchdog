@@ -7,6 +7,7 @@ from actionSystem.actions.MuteHivePostAction import MuteHivePostAction
 from services.HiveNetwork import HiveComment
 from monitoringSystem.MonitoringAgency import Agent
 from reportingSystem.Reporting import SuspiciousActivityReport, SuspiciousActivityLevel
+from services.HiveTools import HivePostIdentifier
 
 
 class SourceBlacklistAgent(Agent, ABC):
@@ -27,7 +28,13 @@ class SourceBlacklistAgent(Agent, ABC):
             urls.append(urlMatch[0])
         return urls
 
+    def _isContestPost(self, post: HiveComment):
+        return HivePostIdentifier.getPostType(post) == HivePostIdentifier.CONTEST_POST_TYPE
+
     def onSuspicionQuery(self, post: HiveComment) -> Tuple[SuspiciousActivityReport, PolicyAction]:
+
+        if not self._isContestPost(post):
+            return None, None
 
         urls = self._getAllUrls(post.body)
         unwantedUrlsFound = []
