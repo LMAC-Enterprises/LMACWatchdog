@@ -10,6 +10,7 @@ from services.AspectLogging import LogAspect
 from services.HiveNetwork import HiveComment
 from monitoringSystem.MonitoringAgency import Agent
 from reportingSystem.Reporting import SuspiciousActivityReport, SuspiciousActivityLevel
+from services.HiveTools import HivePostIdentifier
 
 
 class ContestLinkAgent(Agent, ABC):
@@ -23,10 +24,10 @@ class ContestLinkAgent(Agent, ABC):
         self._logger = LogAspect('cla')
 
     def onSetupRules(self, rules: dict):
+        regexStr = r'(https:\/\/[a-zA-Z0-9_\-\.]+)?\/[a-zA-Z0-9_\-\.\/]*@({moderators})[a-zA-Z0-9_\-\.\/]*contest[a-zA-Z0-9_\-\.\/]*round[a-zA-Z0-9_\-\.\/]*'.format(
+                moderators='|'.join(rules['moderators']))
         self._contestLinkRegex = re.compile(
-            r'(https:\/\/[a-zA-Z0-9_\-\.]+)?\/[a-zA-Z0-9_\-\.\/]*@({moderators})[a-zA-Z0-9_\-\.\/]*contest[a-zA-Z0-9_\-\.\/]*round[a-zA-Z0-9_\-\.\/]*'.format(
-                moderators=rules['moderators']
-            )
+                regexStr
         )
         self._mandatoryContestHashtag = rules['mandatoryContestHashtag']
 
@@ -38,19 +39,14 @@ class ContestLinkAgent(Agent, ABC):
         return False
 
     def _isContestPost(self, post: HiveComment):
-        if post.title.startswith('lil'):
-            return False
-        if '<table class="lil">' in post.body:
-            return False
-        if self._mandatoryContestHashtag not in post.cachedTags:
-            return False
 
-        return True
+        return HivePostIdentifier.getPostType(post) == HivePostIdentifier.CONTEST_POST_TYPE
 
     def onSuspicionQuery(self, post: HiveComment) -> Tuple[SuspiciousActivityReport, PolicyAction]:
 
         if self._isContestPost(post):
             if not self._hasContestLink(post.body):
+                print(post.title)
                 return SuspiciousActivityReport(
                     post.author,
                     post.permlink,
