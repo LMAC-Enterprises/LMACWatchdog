@@ -42,7 +42,7 @@ class Configuration(BaseConfiguration):
     suspectHunterAgentRules: dict = {
         'downvoterIndicators': ['spaminator', 'theycallmedan', 'shaka', 'mballesteros', 'agmoore', 'quantumg']}
 
-    agentSupervisorSettings: dict = {'hiveCommunityId': 'hive-174695', 'hiveCommunityTag': 'letsmakeacollage'}
+    agentSupervisorSettings: dict = {'hiveCommunityId': 'hive-174695', 'hiveCommunityTags': ['letsmakeacollage', 'lmac', 'lil']}
 
     violationReporterSettings: dict = {'settingsByLevel': {
         SuspiciousActivityLevel.WARNING: {'discordTargetChatroom': 912062389736853504},

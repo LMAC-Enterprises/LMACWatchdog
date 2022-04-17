@@ -142,6 +142,7 @@ class HiveHandler:
     _alreadyCommentedPosts: list
     _registryHandler: RegistryHandler
     _simulate: bool
+    _alreadyMonitoredPosts: list
 
     def __new__(cls):
         if cls._instance is None:
@@ -150,9 +151,8 @@ class HiveHandler:
             cls._onPostLoadedHandlers = []
             cls._queuedMessages = []
             cls._muteQueue = []
-            cls._alreadyMutedPosts = []
-            cls._alreadyCommentedPosts = []
             cls._registryHandler = RegistryHandler()
+            cls._alreadyMonitoredPosts = cls._registryHandler.getProperty('HiveHandler', 'alreadyMonitoredPosts', [])
             cls._simulate = False
 
         return cls._instance
@@ -168,67 +168,47 @@ class HiveHandler:
         for handler in self._onPostLoadedHandlers:
             handler(post)
 
-    def loadNewestCommunityPosts(self, hiveCommunityId: str, communityTag: str) -> bool:
-        previousNewestPostTimestamp: int = self._registryHandler.getProperty(self.__class__.__name__,
-                                                                       'previousNewestPostTimestamp', 0)
+    def loadNewestCommunityPosts(self, hiveCommunityId: str, communityTags: list) -> bool:
+        posts = {}
+        for communityTag in communityTags:
+            q = Query(limit=100, tag=communityTag)
+            try:
+                for post in Discussions_by_created(q):
+                    postLink: str = '@{author}/{permlink}'.format(author=post.author, permlink=post.permlink)
+                    if postLink in posts.keys():
+                        continue
+                    if post.category != hiveCommunityId:
+                        continue
+                    if self._wasPostAlreadyMonitored(postLink):
+                        continue
 
-        q = Query(limit=100, tag=communityTag)
-        newestPostTimestamp = 0
-        try:
-            for post in Discussions_by_created(q):
-                postTimestamp = int(round(post['created'].timestamp()))
-                if previousNewestPostTimestamp > postTimestamp:
-                    continue
-                if newestPostTimestamp < postTimestamp:
-                    newestPostTimestamp = postTimestamp
-                if post.category != hiveCommunityId:
-                    continue
-                self._callOnPostLoadedHandlers(HiveComment.convert(post))
-            self._registryHandler.setProperty(self.__class__.__name__, 'previousNewestPostTimestamp', newestPostTimestamp)
-        except OfflineHasNoRPCException as e:
-            return False
+                    self._markPostAsMonitored(postLink)
+                    posts[postLink] = post
+            except OfflineHasNoRPCException as e:
+                return False
+
+        for post in posts.values():
+            self._callOnPostLoadedHandlers(HiveComment.convert(post))
 
         return True
 
-    def _isPostAlreadyMuted(self, postLink: str) -> bool:
-        return postLink in self._alreadyMutedPosts
+    def _wasPostAlreadyMonitored(self, postLink: str) -> bool:
+        return postLink in self._alreadyMonitoredPosts
 
-    def _isPostAlreadyCommented(self, postLink: str) -> bool:
-        return postLink in self._alreadyCommentedPosts
+    def _markPostAsMonitored(self, postLink: str):
+        self._alreadyMonitoredPosts.append(postLink)
+        if len(self._alreadyMonitoredPosts) > 300:
+            self._alreadyMonitoredPosts.pop()
 
-    def _markPostAsMuted(self, postLink: str):
-        self._alreadyMutedPosts.append(postLink)
-        if len(self._alreadyMutedPosts) > 100:
-            self._alreadyMutedPosts.pop()
-
-        self._registryHandler.setProperty(self.__class__.__name__, 'alreadyMutedPosts', self._alreadyMutedPosts)
-
-    def _markPostAsCommented(self, postLink: str):
-        self._alreadyCommentedPosts.append(postLink)
-        if len(self._alreadyCommentedPosts) > 100:
-            self._alreadyCommentedPosts.pop()
-
-        self._registryHandler.setProperty(self.__class__.__name__, 'alreadyCommentedPosts', self._alreadyCommentedPosts)
+        self._registryHandler.setProperty('HiveHandler', '_alreadyMonitoredPosts', self._alreadyMonitoredPosts)
 
     def enqueuePostToMuteInCommunity(self, hiveComment: HiveComment, reason: str):
-        postLink: str = '@{author}/{permlink}'.format(author=hiveComment.author, permlink=hiveComment.permlink)
-        if self._isPostAlreadyMuted(postLink):
-            return
 
         self._muteQueue.append(QueuedPostToMute(hiveComment, reason))
 
-        self._markPostAsMuted(postLink)
-
     def enqueueMessage(self, author: str, permlink: str, message: str):
-        postLink: str = '@{author}/{permlink}'.format(author=author, permlink=permlink)
-
-        if self._isPostAlreadyCommented(postLink):
-            return
-
         hiveMessage = QueuedHiveMessage(permlink, author, message)
         self._queuedMessages.append(hiveMessage)
-
-        self._markPostAsCommented(postLink)
 
     def processNextQueuedMessages(self) -> bool:
         if len(self._queuedMessages) == 0:
