@@ -48,10 +48,13 @@ class RegistryHandler:
 
     def saveAll(self):
         if self._simulate:
+            print('Save:\n{registry}'.format(registry=self._realms))
             return
 
         if not self._dirty:
             return
+
+        self._dirty = False
 
         with open('registry.json', 'w') as f:
             json.dump(self._realms, f)
