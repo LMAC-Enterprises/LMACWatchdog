@@ -67,7 +67,7 @@ def main(arguments: dict) -> int:
     # Initialize AgentSupervisor
     agentSupervisor = AgentSupervisor(
         Configuration.agentSupervisorSettings['hiveCommunityId'],
-        Configuration.agentSupervisorSettings['hiveCommunityTag'], {
+        Configuration.agentSupervisorSettings['hiveCommunityTags'], {
             LMACBeneficiaryAgent.LMACBeneficiaryAgent: Configuration.lmacBeneficiaryAgentRules,
             LILBeneficiaryAgent.LILBeneficiaryAgent: Configuration.lilBeneficiaryAgentRules,
             SourceBlacklistAgent.SourceBlacklistAgent: Configuration.sourceBlacklistAgentRules,
@@ -96,10 +96,12 @@ def main(arguments: dict) -> int:
     discordDispatcher.runDiscordTasks(Configuration.discordToken)
 
     while hiveHandler.processNextQueuedMessages():
-        time.sleep(Configuration.delayBetweenSendingHiveComments)
+        if not simulate:
+            time.sleep(Configuration.delayBetweenSendingHiveComments)
 
     while hiveHandler.muteNextQueuedPosts():
-        time.sleep(Configuration.delayBetweenMutingHiveComments)
+        if not simulate:
+            time.sleep(Configuration.delayBetweenMutingHiveComments)
 
     registryHandler.saveAll()
 
