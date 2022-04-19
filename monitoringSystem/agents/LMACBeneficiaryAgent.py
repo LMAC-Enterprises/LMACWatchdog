@@ -3,6 +3,7 @@ from typing import Tuple
 
 from actionSystem.ActionHandling import PolicyAction
 from actionSystem.actions.MuteHivePostAction import MuteHivePostAction
+from services import HiveTools
 from services.HiveNetwork import HiveComment
 from monitoringSystem.MonitoringAgency import Agent
 from reportingSystem.Reporting import SuspiciousActivityReport, SuspiciousActivityLevel
@@ -22,6 +23,9 @@ class LMACBeneficiaryAgent(Agent, ABC):
         self._requiredBeneficiary = rules['requiredBeneficiary']
 
     def onSuspicionQuery(self, post: HiveComment) -> Tuple[SuspiciousActivityReport, PolicyAction]:
+        if HiveTools.HivePostIdentifier.getPostType(post) != HiveTools.HivePostIdentifier.CONTEST_POST_TYPE and \
+                HiveTools.HivePostIdentifier.getPostType(post) != HiveTools.HivePostIdentifier.LIL_POST_TYPE:
+            return None, None
 
         if post.author == 'shaka':
             return None, None
@@ -34,7 +38,7 @@ class LMACBeneficiaryAgent(Agent, ABC):
                 SuspiciousActivityLevel.WARNING,
                 'iMac typo in "@{requiredBeneficiary}" beneficiary.'.format(
                     requiredBeneficiary=self._requiredBeneficiary)
-            ), MuteHivePostAction(post, 'Use of non-compliant image sources.')
+            ), MuteHivePostAction(post, 'lmac beneficiary not set.')
 
         if self._requiredBeneficiary in post.cachedBeneficiaries.keys():
             if post.cachedBeneficiaries[self._requiredBeneficiary] < self._minimumBenefication:
@@ -45,7 +49,7 @@ class LMACBeneficiaryAgent(Agent, ABC):
                     SuspiciousActivityLevel.WARNING,
                     'Insufficient beneficiary weight set for @{requiredBeneficiary}.'.format(
                         requiredBeneficiary=self._requiredBeneficiary)
-                ), MuteHivePostAction(post, 'Use of non-compliant image sources.')
+                ), MuteHivePostAction(post, 'lmac beneficiary set to low.')
         else:
             return SuspiciousActivityReport(
                 post.author,
@@ -53,6 +57,6 @@ class LMACBeneficiaryAgent(Agent, ABC):
                 self._agentId,
                 SuspiciousActivityLevel.WARNING,
                 'Beneficiary not set for @{requiredBeneficiary}.'.format(requiredBeneficiary=self._requiredBeneficiary)
-            ), MuteHivePostAction(post, 'Use of non-compliant image sources.')
+            ), MuteHivePostAction(post, 'lmac beneficiary not set.')
 
         return None, None
