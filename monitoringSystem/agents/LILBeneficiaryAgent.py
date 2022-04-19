@@ -4,6 +4,7 @@ from typing import Tuple
 
 from actionSystem.ActionHandling import PolicyAction
 from actionSystem.actions.MuteHivePostAction import MuteHivePostAction
+from services import HiveTools
 from services.HiveNetwork import HiveComment
 from monitoringSystem.MonitoringAgency import Agent
 from reportingSystem.Reporting import SuspiciousActivityReport, SuspiciousActivityLevel
@@ -29,6 +30,9 @@ class LILBeneficiaryAgent(Agent, ABC):
 
     def onSuspicionQuery(self, post: HiveComment) -> Tuple[SuspiciousActivityReport, PolicyAction]:
 
+        if HiveTools.HivePostIdentifier.getPostType(post) != HiveTools.HivePostIdentifier.CONTEST_POST_TYPE:
+            return None, None
+
         lilUrlsFound = self._getAllLILUrls(post.body)
 
         if len(lilUrlsFound) > 0 and self._lilBeneficiaryWeight not in post.cachedBeneficiaries.values():
@@ -41,6 +45,6 @@ class LILBeneficiaryAgent(Agent, ABC):
                     urlsCount=len(lilUrlsFound),
                     lilUrls='\n'.join(lilUrlsFound)
                 )
-            ), MuteHivePostAction(post, 'Use of non-compliant image sources.')
+            ), MuteHivePostAction(post, 'Missing 2% beneficiaries per LIL image.')
 
         return None, None
