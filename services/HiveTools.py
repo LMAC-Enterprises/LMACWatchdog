@@ -21,7 +21,7 @@ class HivePostIdentifier:
     TUTORIAL_POST_TYPE: int = 3
 
     @staticmethod
-    def getPostType(post: HiveComment) -> HivePostType:
+    def getPostType(post: HiveComment) -> int:
         title = post.title.lower()
 
         if 'tutorial' in title or 'lmacschool' in post.cachedTags:
