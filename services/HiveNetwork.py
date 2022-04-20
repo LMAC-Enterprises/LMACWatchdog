@@ -25,8 +25,8 @@ class HiveWallet:
         return True
 
     @staticmethod
-    def unlock(walletPassword: str, username: str, community: str):
-        hiveWallet = HiveWallet(username, community)
+    def unlock(walletPassword: str, username: str, community: str, hiveApiUrl: str):
+        hiveWallet = HiveWallet(username, community, hiveApiUrl)
         try:
             hiveWallet.hive.wallet.unlock(walletPassword)
         except beemstorage.exceptions.WalletLocked:
@@ -34,8 +34,8 @@ class HiveWallet:
 
         return hiveWallet
 
-    def __init__(self, username, community):
-        self._hive = Hive()
+    def __init__(self, username, community, hiveApiUrl: str):
+        self._hive = Hive(hiveApiUrl)
         self._hiveCommunity = Community(community, blockchain_instance=self._hive)
         self._username = username
 
@@ -143,6 +143,8 @@ class HiveHandler:
     _registryHandler: RegistryHandler
     _simulate: bool
     _alreadyMonitoredPosts: list
+    _ignorePostsCommentedBy: list
+    _exceptAuthors: list
 
     def __new__(cls):
         if cls._instance is None:
@@ -154,12 +156,16 @@ class HiveHandler:
             cls._registryHandler = RegistryHandler()
             cls._alreadyMonitoredPosts = cls._registryHandler.getProperty('HiveHandler', 'alreadyMonitoredPosts', [])
             cls._simulate = False
+            cls._ignorePostsCommentedBy = []
+            cls._exceptAuthors = []
 
         return cls._instance
 
-    def setup(self, hiveWallet: HiveWallet, simulate: bool):
+    def setup(self, hiveWallet: HiveWallet, ignorePostsCommentedBy: list, exceptAuthors: list, simulate: bool):
         self._hiveWallet = hiveWallet
         self._simulate = simulate
+        self._ignorePostsCommentedBy = ignorePostsCommentedBy
+        self._exceptAuthors = exceptAuthors
 
     def addOnPostLoadedHandler(self, handlerCallback):
         self._onPostLoadedHandlers.append(handlerCallback)
@@ -173,7 +179,7 @@ class HiveHandler:
         for communityTag in communityTags:
             q = Query(limit=100, tag=communityTag)
             try:
-                for post in Discussions_by_created(q):
+                for post in Discussions_by_created(q, blockchain_instance=self._hiveWallet.hive):
                     postLink: str = '@{author}/{permlink}'.format(author=post.author, permlink=post.permlink)
                     if postLink in posts.keys():
                         continue
@@ -188,9 +194,22 @@ class HiveHandler:
                 return False
 
         for post in posts.values():
+            if self._shouldThisPostBeIgnored(post):
+                continue
             self._callOnPostLoadedHandlers(HiveComment.convert(post))
 
         return True
+
+    def _shouldThisPostBeIgnored(self, post) -> bool:
+        comments: list = post.get_all_replies(post)
+        for comment in comments:
+            if comment.author in self._ignorePostsCommentedBy:
+                return True
+
+        if post.author in self._exceptAuthors:
+            return True
+
+        return False
 
     def _wasPostAlreadyMonitored(self, postLink: str) -> bool:
         return postLink in self._alreadyMonitoredPosts
