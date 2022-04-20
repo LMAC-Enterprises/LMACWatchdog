@@ -37,7 +37,10 @@ def main(arguments: dict) -> int:
 
     # Unlock Hive wallet.
     hiveWallet = HiveWallet.unlock(
-        Configuration.hiveWalletPassword, Configuration.hiveUser, Configuration.hiveCommunityId
+        Configuration.hiveWalletPassword,
+        Configuration.hiveUser,
+        Configuration.hiveCommunityId,
+        Configuration.hiveApiUrl
     )
     if not hiveWallet:
         logInfo('Error. Wrong wallet password.')
@@ -45,7 +48,7 @@ def main(arguments: dict) -> int:
 
     # Initialize HiveHandler singleton.
     hiveHandler = HiveHandler()
-    hiveHandler.setup(hiveWallet, simulate)
+    hiveHandler.setup(hiveWallet, Configuration.ignorePostsCommentedBy, Configuration.exceptAuthors, simulate)
 
     # Initialize RegistryHandler.
     registryHandler = RegistryHandler()
@@ -72,7 +75,7 @@ def main(arguments: dict) -> int:
             LILBeneficiaryAgent.LILBeneficiaryAgent: Configuration.lilBeneficiaryAgentRules,
             SourceBlacklistAgent.SourceBlacklistAgent: Configuration.sourceBlacklistAgentRules,
             SuspectHunterAgent.SuspectHunterAgent: Configuration.suspectHunterAgentRules,
-            BadWordsAgent.BadWordsAgent: Configuration.badWordsAgentRules,
+            # BadWordsAgent.BadWordsAgent: Configuration.badWordsAgentRules,
             ContestLinkAgent.ContestLinkAgent: Configuration.contestLinkAgentRules
         },
         policyActionSupervisor,
