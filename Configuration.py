@@ -5,8 +5,10 @@ from reportingSystem.Reporting import SuspiciousActivityLevel
 class Configuration(BaseConfiguration):
     hiveCommunityId: str = 'hive-174695'
     exceptAuthors: list = ['shaka', 'agmoore', 'mballesteros', 'quantumg', 'lilybee']
+    ignorePostsCommentedBy: list = ['lmac', 'lilybee']
     delayBetweenSendingHiveComments: float = 5.0  # Seconds
     delayBetweenMutingHiveComments: float = 5.0  # Seconds
+    hiveApiUrl: str = 'https://api.deathwing.me'
 
     sourceBlacklistAgentRules: dict = {
         'blacklist': [
