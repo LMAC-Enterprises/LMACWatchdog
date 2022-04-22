@@ -133,6 +133,8 @@ class QueuedPostToMute:
 
 
 class HiveHandler:
+    MAX_ALREADY_MONITORED_POSTS_TO_REMEMBER: int = 350
+
     _instance = None
     _hiveWallet: HiveWallet
     _onPostLoadedHandlers: list
@@ -216,7 +218,7 @@ class HiveHandler:
 
     def _markPostAsMonitored(self, postLink: str):
         self._alreadyMonitoredPosts.append(postLink)
-        if len(self._alreadyMonitoredPosts) > 300:
+        while len(self._alreadyMonitoredPosts) > HiveHandler.MAX_ALREADY_MONITORED_POSTS_TO_REMEMBER:
             self._alreadyMonitoredPosts.pop()
 
         self._registryHandler.setProperty('HiveHandler', '_alreadyMonitoredPosts', self._alreadyMonitoredPosts)
