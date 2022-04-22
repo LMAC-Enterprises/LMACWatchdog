@@ -28,7 +28,8 @@ class SourceBlacklistAgent(Agent, ABC):
             urls.append(urlMatch[0])
         return urls
 
-    def _isContestPost(self, post: HiveComment):
+    @staticmethod
+    def _isContestPost(post: HiveComment):
         return HivePostIdentifier.getPostType(post) == HivePostIdentifier.CONTEST_POST_TYPE
 
     def onSuspicionQuery(self, post: HiveComment) -> Tuple[SuspiciousActivityReport, PolicyAction]:
