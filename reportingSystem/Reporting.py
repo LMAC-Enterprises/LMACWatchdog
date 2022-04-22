@@ -118,7 +118,7 @@ class ReportDispatcher:
         return hiveLinkKeyedReports.values()
 
     def promoteReports(self):
-        self._unifyReports()
+        # self._unifyReports()
         for report in self._reports:
             for reporter in self._reporters:
                 reporter.onNewReportAvailable(report)
