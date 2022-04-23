@@ -46,6 +46,7 @@ class HiveWallet:
     def submitComment(self, toAuthor: str, toPermlink: str, message: str) -> bool:
         comment = Comment('@{author}/{permlink}'.format(author=toAuthor, permlink=toPermlink), blockchain_instance=self._hive)
         comment.reply(message, author=self._username)
+        return True
 
     def muteInCommunity(self, comment: Comment, reason: str):
         self._hiveCommunity.mute_post(comment.author, comment.permlink, reason, self._username)
@@ -140,8 +141,6 @@ class HiveHandler:
     _onPostLoadedHandlers: list
     _queuedMessages: list
     _muteQueue: list
-    _alreadyMutedPosts: list
-    _alreadyCommentedPosts: list
     _registryHandler: RegistryHandler
     _simulate: bool
     _alreadyMonitoredPosts: list
@@ -177,25 +176,23 @@ class HiveHandler:
             handler(post)
 
     def loadNewestCommunityPosts(self, hiveCommunityId: str, communityTags: list) -> bool:
-        posts = {}
+        posts = []
         for communityTag in communityTags:
             q = Query(limit=100, tag=communityTag)
             try:
                 for post in Discussions_by_created(q, blockchain_instance=self._hiveWallet.hive):
                     postLink: str = '@{author}/{permlink}'.format(author=post.author, permlink=post.permlink)
-                    if postLink in posts.keys():
-                        continue
                     if post.category != hiveCommunityId:
                         continue
                     if self._wasPostAlreadyMonitored(postLink):
                         continue
 
                     self._markPostAsMonitored(postLink)
-                    posts[postLink] = post
+                    posts.append(post)
             except OfflineHasNoRPCException as e:
                 return False
 
-        for post in posts.values():
+        for post in posts:
             if self._shouldThisPostBeIgnored(post):
                 continue
             self._callOnPostLoadedHandlers(HiveComment.convert(post))
@@ -219,9 +216,9 @@ class HiveHandler:
     def _markPostAsMonitored(self, postLink: str):
         self._alreadyMonitoredPosts.append(postLink)
         while len(self._alreadyMonitoredPosts) > HiveHandler.MAX_ALREADY_MONITORED_POSTS_TO_REMEMBER:
-            self._alreadyMonitoredPosts.pop()
+            self._alreadyMonitoredPosts.pop(0)
 
-        self._registryHandler.setProperty('HiveHandler', '_alreadyMonitoredPosts', self._alreadyMonitoredPosts)
+        self._registryHandler.setProperty('HiveHandler', 'alreadyMonitoredPosts', self._alreadyMonitoredPosts)
 
     def enqueuePostToMuteInCommunity(self, hiveComment: HiveComment, reason: str):
 
