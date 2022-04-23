@@ -4,7 +4,7 @@ from reportingSystem.Reporting import SuspiciousActivityLevel
 
 class Configuration(BaseConfiguration):
     hiveCommunityId: str = 'hive-174695'
-    exceptAuthors: list = ['shaka', 'agmoore', 'mballesteros', 'quantumg', 'lilybee']
+    exceptAuthors: list = ['shaka', 'agmoore', 'mballesteros', 'quantumg', 'lilybee', 'lmac']
     ignorePostsCommentedBy: list = ['lmac', 'lilybee']
     delayBetweenSendingHiveComments: float = 5.0  # Seconds
     delayBetweenMutingHiveComments: float = 5.0  # Seconds
@@ -12,6 +12,7 @@ class Configuration(BaseConfiguration):
 
     sourceBlacklistAgentRules: dict = {
         'blacklist': [
+            r'^(?:http|https)\:\/\/pxhere\.com\/.+',
             r'^(?:http|https)\:\/\/stock\.adobe\.com\/.+',
             r'^(?:http|https)\:\/\/(?:\w*\.)?canva\.com\/\w.*$',
             r'^(?:http|https)\:\/\/(?:\w*\.)?istockphoto\.com\/\w.*$',
