@@ -46,13 +46,13 @@ def main(arguments: dict) -> int:
         logInfo('Error. Wrong wallet password.')
         return EXITCODE_ERROR
 
-    # Initialize HiveHandler singleton.
-    hiveHandler = HiveHandler()
-    hiveHandler.setup(hiveWallet, Configuration.ignorePostsCommentedBy, Configuration.exceptAuthors, simulate)
-
     # Initialize RegistryHandler.
     registryHandler = RegistryHandler()
     registryHandler.setSimulationMode(simulate)
+
+    # Initialize HiveHandler singleton.
+    hiveHandler = HiveHandler()
+    hiveHandler.setup(hiveWallet, Configuration.ignorePostsCommentedBy, Configuration.exceptAuthors, simulate)
 
     # Initialize ReportDispatcher.
     reportDispatcher = ReportDispatcher({
