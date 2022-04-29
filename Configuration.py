@@ -4,7 +4,7 @@ from reportingSystem.Reporting import SuspiciousActivityLevel
 
 class Configuration(BaseConfiguration):
     hiveCommunityId: str = 'hive-174695'
-    exceptAuthors: list = ['shaka', 'agmoore', 'mballesteros', 'quantumg', 'lilybee', 'lmac']
+    exceptAuthors: list = ['shaka', 'agmoore', 'mballesteros', 'quantumg', 'lilybee', 'lmac', 'detlev']
     ignorePostsCommentedBy: list = ['lmac', 'lilybee']
     delayBetweenSendingHiveComments: float = 5.0  # Seconds
     delayBetweenMutingHiveComments: float = 5.0  # Seconds
@@ -45,7 +45,7 @@ class Configuration(BaseConfiguration):
     suspectHunterAgentRules: dict = {
         'downvoterIndicators': ['spaminator', 'theycallmedan', 'shaka', 'mballesteros', 'agmoore', 'quantumg']}
 
-    agentSupervisorSettings: dict = {'hiveCommunityId': 'hive-174695', 'hiveCommunityTags': ['letsmakeacollage', 'lmac', 'lil']}
+    agentSupervisorSettings: dict = {'hiveCommunityId': 'hive-174695', 'hiveCommunityTags': ['letsmakeacollage', 'lmac', 'lil', 'hive-174695']}
 
     violationReporterSettings: dict = {'settingsByLevel': {
         SuspiciousActivityLevel.WARNING: {'discordTargetChatroom': 912062389736853504},
@@ -54,6 +54,6 @@ class Configuration(BaseConfiguration):
     }}
 
     contestLinkAgentRules: dict = {
-        'moderators': ['shaka', 'agmoore', 'mballesteros', 'quantumg', 'lilybee'],
+        'moderators': ['shaka', 'lmac'],
         'mandatoryContestHashtag': 'letsmakeacollage'
     }
