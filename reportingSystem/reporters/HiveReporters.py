@@ -1,4 +1,5 @@
 from reportingSystem.Reporting import Reporter, SuspiciousActivityReport
+from services import HiveTools
 from services.HiveNetwork import HiveHandler
 from services.TemplateHandling import TemplateEngine
 
@@ -19,9 +20,9 @@ class LMACBeneficiaryHiveReporter(Reporter):
             report.author,
             report.permlink,
             self._templateEngine.createContent(
-                'lmacSubmissionBeneficiary',
+                'lmacSubmissionBeneficiary' if report.meta['postType'] == HiveTools.HivePostIdentifier.CONTEST_POST_TYPE else 'lilSubmissionBeneficiary',
                 author=report.author,
-                postSubject='LMAC contest'
+                postSubject='LMAC contest' if report.meta['postType'] == HiveTools.HivePostIdentifier.CONTEST_POST_TYPE else '#LIL'
             )
         )
 
