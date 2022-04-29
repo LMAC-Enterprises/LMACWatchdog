@@ -24,7 +24,7 @@ class ContestLinkAgent(Agent, ABC):
         self._logger = LogAspect('cla')
 
     def onSetupRules(self, rules: dict):
-        regexStr = r'(https:\/\/[a-zA-Z0-9_\-\.]+)?\/[a-zA-Z0-9_\-\.\/]*@({moderators})[a-zA-Z0-9_\-\.\/]*contest[a-zA-Z0-9_\-\.\/]*round[a-zA-Z0-9_\-\.\/]*'.format(
+        regexStr = r'(https:\/\/[a-zA-Z0-9_\-\.]+)?\/[a-zA-Z0-9_\-\.\/]*@({moderators})\/[a-zA-Z0-9_\-\.\/]*'.format(
                 moderators='|'.join(rules['moderators']))
         self._contestLinkRegex = re.compile(
                 regexStr
