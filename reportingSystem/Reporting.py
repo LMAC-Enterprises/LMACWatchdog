@@ -16,14 +16,16 @@ class SuspiciousActivityReport:
     _agentId: str
     _activityLevel: int
     _description: str
+    _meta: dict
 
     def __init__(self, author: str, permlink: str, agentId: str, activityLevel: int,
-                 description: str):
+                 description: str, meta: dict = {}):
         self._author = author
         self._permlink = permlink
         self._agentId = agentId
         self._activityLevel = activityLevel
         self._description = description.format(author=author, permlink=permlink, agentId=agentId)
+        self._meta = meta
 
     @property
     def author(self) -> str:
@@ -57,6 +59,13 @@ class SuspiciousActivityReport:
     def description(self, text):
         self._description = text
 
+    @property
+    def meta(self) -> dict:
+        return self._meta
+
+    @description.setter
+    def meta(self, data: dict):
+        self._meta = data
 
 class Reporter(ABC):
     @abstractmethod
