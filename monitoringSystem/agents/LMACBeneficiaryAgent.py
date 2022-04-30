@@ -30,6 +30,8 @@ class LMACBeneficiaryAgent(Agent, ABC):
         if post.author == 'shaka':
             return None, None
 
+        postType = HiveTools.HivePostIdentifier.getPostType(post)
+
         if 'imac' in post.cachedBeneficiaries:
             return SuspiciousActivityReport(
                 post.author,
@@ -38,7 +40,7 @@ class LMACBeneficiaryAgent(Agent, ABC):
                 SuspiciousActivityLevel.WARNING,
                 'iMac typo in "@{requiredBeneficiary}" beneficiary.'.format(
                     requiredBeneficiary=self._requiredBeneficiary),
-                {'postType': HiveTools.HivePostIdentifier.getPostType(post)}
+                {'postType': postType}
             ), MuteHivePostAction(post, 'lmac beneficiary not set.')
 
         if self._requiredBeneficiary in post.cachedBeneficiaries.keys():
@@ -50,7 +52,7 @@ class LMACBeneficiaryAgent(Agent, ABC):
                     SuspiciousActivityLevel.WARNING,
                     'Insufficient beneficiary weight set for @{requiredBeneficiary}.'.format(
                         requiredBeneficiary=self._requiredBeneficiary),
-                {'postType': HiveTools.HivePostIdentifier.getPostType(post)}
+                    {'postType': postType}
                 ), MuteHivePostAction(post, 'lmac beneficiary set to low.')
         else:
             return SuspiciousActivityReport(
@@ -59,7 +61,7 @@ class LMACBeneficiaryAgent(Agent, ABC):
                 self._agentId,
                 SuspiciousActivityLevel.WARNING,
                 'Beneficiary not set for @{requiredBeneficiary}.'.format(requiredBeneficiary=self._requiredBeneficiary),
-                {'postType': HiveTools.HivePostIdentifier.getPostType(post)}
+                {'postType': postType}
             ), MuteHivePostAction(post, 'lmac beneficiary not set.')
 
         return None, None
