@@ -46,9 +46,9 @@ class LILBeneficiaryHiveReporter(Reporter):
             report.author,
             report.permlink,
             self._templateEngine.createContent(
-                'lilSubmissionBeneficiary',
+                'lilUseBeneficiary',
                 author=report.author,
-                postSubject='#LIL'
+                postSubject='LMAC contest'
             )
         )
 
