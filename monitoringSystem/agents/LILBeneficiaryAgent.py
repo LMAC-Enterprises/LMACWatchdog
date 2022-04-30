@@ -16,7 +16,7 @@ class LILBeneficiaryAgent(Agent, ABC):
     def __init__(self):
         super().__init__('LIL Beneficiary Agent')
         self._lilBeneficiaryWeight = 200
-        self._urlRegex = re.compile(r'https:\/\/lmac.gallery\/lil-gallery-image\/\d+', re.DOTALL)
+        self._urlRegex = re.compile(r'https\:\/\/(?:www\.)?lmac\.gallery\/lil-gallery-image\/\d+', re.DOTALL)
 
     def onSetupRules(self, rules: dict):
         self._lilBeneficiaryWeight = rules['lilBeneficiaryWeight']
@@ -25,7 +25,7 @@ class LILBeneficiaryAgent(Agent, ABC):
         urlMatches = re.findall(self._urlRegex, text)
         urls = []
         for urlMatch in urlMatches:
-            urls.append(urlMatch[0])
+            urls.append(urlMatch)
         return urls
 
     def onSuspicionQuery(self, post: HiveComment) -> Tuple[SuspiciousActivityReport, PolicyAction]:
