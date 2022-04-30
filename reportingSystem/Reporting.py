@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from enum import Enum
 
 
 class SuspiciousActivityLevel:
@@ -63,9 +62,10 @@ class SuspiciousActivityReport:
     def meta(self) -> dict:
         return self._meta
 
-    @description.setter
+    @meta.setter
     def meta(self, data: dict):
         self._meta = data
+
 
 class Reporter(ABC):
     @abstractmethod
