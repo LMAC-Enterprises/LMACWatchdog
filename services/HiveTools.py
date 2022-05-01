@@ -37,6 +37,9 @@ class HivePostIdentifier:
         if 'let\'s make a collage' in body and 'round' in body and ('letsmakeacollage' in post.cachedTags or 'lmac' in post.cachedTags):
             return HivePostIdentifier.CONTEST_POST_TYPE
 
+        if 'lmac' in title and 'lil' not in title and 'lil' not in post.cachedTags and 'letsmakeacollage' in post.cachedTags:
+            return HivePostIdentifier.CONTEST_POST_TYPE
+
         if ('letsmakeacollage' in post.cachedTags or 'lmac' in post.cachedTags) and (
                 'round' in title or 'contest' in title or 'collage' in title or 'rondo' in title or 'concurso' in title or 'lmac special' in title or 'prize pool' in title):
             return HivePostIdentifier.CONTEST_POST_TYPE
