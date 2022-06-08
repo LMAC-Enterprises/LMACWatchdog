@@ -35,7 +35,9 @@ class LILBeneficiaryAgent(Agent, ABC):
 
         lilUrlsFound = self._getAllLILUrls(post.body)
 
-        if len(lilUrlsFound) > 0 and self._lilBeneficiaryWeight not in post.cachedBeneficiaries.values():
+        # OLD SOLUTION:
+        # if len(lilUrlsFound) > 0 and self._lilBeneficiaryWeight not in post.cachedBeneficiaries.values():
+        if len(lilUrlsFound) > 0 and len(post.cachedBeneficiaries.values()) < 2:  # temporary solution
             return SuspiciousActivityReport(
                 post.author,
                 post.permlink,
