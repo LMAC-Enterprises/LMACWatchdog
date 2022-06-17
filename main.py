@@ -61,7 +61,8 @@ def main(arguments: dict) -> int:
             HiveReporters.ContestLinkHiveReporter: {},
             HiveReporters.LILBeneficiaryHiveReporter: {},
             HiveReporters.LMACBeneficiaryHiveReporter: {}
-        }
+        },
+        Configuration.dispatcherDiscordNotificationChannel
     )
 
     # Initialize PolicyActionSupervisor.

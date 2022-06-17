@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from services.Discord import DiscordDispatcher, DiscordMessage
+
 
 class SuspiciousActivityLevel:
     WARNING: int = 1
@@ -80,17 +82,26 @@ class Reporter(ABC):
 class ReportDispatcher:
     _reporters: list
     _reports: list
+    _discordNotificationChannel: int
 
     MERGED_AGENT_ID = 'Multiple agents'
 
-    def __init__(self, reportersInfo: dict):
+    def __init__(self, reportersInfo: dict, discordNotificationChannel: int):
         self._reporters = []
         self._reports = []
+        self._discordNotificationChannel = discordNotificationChannel
 
         for reporterClass in reportersInfo.keys():
             reporter: Reporter = reporterClass()
             reporter.onStart(reportersInfo[reporterClass])
             self._reporters.append(reporter)
+
+    def sendNotification(self, message: str):
+        discordDispatcher = DiscordDispatcher()
+        discordDispatcher.enterChatroom(self._discordNotificationChannel)
+        discordDispatcher.enqueueMessage(
+            message
+        )
 
     def handOverReport(self, report: SuspiciousActivityReport):
         self._reports.append(report)

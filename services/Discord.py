@@ -21,6 +21,9 @@ class DiscordMessage:
     def __str__(self):
         return 'Discord message: {message}'.format(message=self._message)
 
+    def __repr__(self):
+        return self.__str__()
+
 
 class DiscordMessageTransponder(discord.Client):
     _channelId: int

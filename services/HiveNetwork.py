@@ -2,10 +2,11 @@ import json
 
 import beemstorage
 from beem import Hive
+from beem.account import Account
 from beem.comment import Comment
 from beem.community import Community
 from beem.discussions import Discussions_by_created, Query
-from beem.exceptions import OfflineHasNoRPCException
+from beem.exceptions import OfflineHasNoRPCException, AccountDoesNotExistsException
 
 from services.Registry import RegistryHandler
 
@@ -42,6 +43,10 @@ class HiveWallet:
     @property
     def hive(self) -> Hive:
         return self._hive
+    
+    @property
+    def username(self):
+        return self._username
 
     def submitComment(self, toAuthor: str, toPermlink: str, message: str) -> bool:
         comment = Comment('@{author}/{permlink}'.format(author=toAuthor, permlink=toPermlink), blockchain_instance=self._hive)
@@ -50,7 +55,6 @@ class HiveWallet:
 
     def muteInCommunity(self, comment: Comment, reason: str):
         self._hiveCommunity.mute_post(comment.author, comment.permlink, reason, self._username)
-
 
 class QueuedHiveMessage:
     _toAuthor: str
@@ -139,6 +143,7 @@ class HiveHandler:
     _instance = None
     _hiveWallet: HiveWallet
     _onPostLoadedHandlers: list
+    _onReplyLoadedHandlers: list
     _queuedMessages: list
     _muteQueue: list
     _registryHandler: RegistryHandler
@@ -152,6 +157,7 @@ class HiveHandler:
             cls._instance = super(HiveHandler, cls).__new__(cls)
             cls._hiveWallet = None
             cls._onPostLoadedHandlers = []
+            cls._onReplyLoadedHandlers = []
             cls._queuedMessages = []
             cls._muteQueue = []
             cls._registryHandler = RegistryHandler()
@@ -161,6 +167,9 @@ class HiveHandler:
             cls._exceptAuthors = []
 
         return cls._instance
+
+    def getHiveWallet(self):
+        return self._hiveWallet
 
     def setup(self, hiveWallet: HiveWallet, ignorePostsCommentedBy: list, exceptAuthors: list, simulate: bool):
         self._hiveWallet = hiveWallet
@@ -174,6 +183,29 @@ class HiveHandler:
     def _callOnPostLoadedHandlers(self, post: HiveComment):
         for handler in self._onPostLoadedHandlers:
             handler(post)
+
+    def addOnReplyLoadedHandler(self, handlerCallback):
+        self._onReplyLoadedHandlers.append(handlerCallback)
+
+    def _callOnReplyLoadedHandlers(self, post: HiveComment):
+        for handler in self._onReplyLoadedHandlers:
+            handler(post)
+
+    def loadNewestAccountReplies(self, accountName: str):
+        try:
+            account = Account(accountName, blockchain_instance=self._hiveWallet.hive)
+            history = account.reply_history()
+            for reply in history:
+                if reply.author in self._exceptAuthors:
+                    continue
+
+                self._callOnReplyLoadedHandlers(HiveComment.convert(reply))
+        except AccountDoesNotExistsException as e:
+            return False
+        except Exception as e:
+            return False
+
+        return True
 
     def loadNewestCommunityPosts(self, hiveCommunityId: str, communityTags: list) -> bool:
         posts = []
