@@ -71,8 +71,7 @@ class AgentSupervisor:
         if reply.authorperm in alreadyProcessedReplies:
             return
 
-        ageInDays: int = int(str(reply.time_elapsed()).split()[0])
-        if ageInDays > 7:
+        if reply.time_elapsed().days > 7:
             return
 
         self._reportDispatcher.sendNotification(
