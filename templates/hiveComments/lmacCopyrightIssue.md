@@ -1,4 +1,4 @@
-Unfortunately, several assets which you used for your collage are not free of copyright restrictions.
+Unfortunately, several assets which you used for your collage are not from whitelisted sources.
 
 According to our contest rules (as laid out in each week's announcement post) collages need to be composed with materials free of any copyright claims. Otherwise, collages cannot be allowed in the competition.
 
