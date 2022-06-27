@@ -19,6 +19,7 @@ class HivePostIdentifier:
     CONTEST_POST_TYPE: int = 1
     LIL_POST_TYPE: int = 2
     TUTORIAL_POST_TYPE: int = 3
+    NO_LIL_TABLE_LIL_POST_TYPE: int = 4
 
     @staticmethod
     def getPostType(post: HiveComment) -> int:
@@ -28,11 +29,14 @@ class HivePostIdentifier:
         if 'tutorial' in title or 'lmacschool' in post.cachedTags:
             return HivePostIdentifier.TUTORIAL_POST_TYPE
 
-        if title.startswith('lil') and 'lil' in post.cachedTags and '<table class="lil">' in post.body:
-            return HivePostIdentifier.LIL_POST_TYPE
+        if title.startswith('lil:') and '<table class="lil">' not in post.body:
+            return HivePostIdentifier.NO_LIL_TABLE_LIL_POST_TYPE
 
         if title.startswith('lil') and 'lil' in post.cachedTags and '<table class="lil">' not in post.body:
-            return HivePostIdentifier.UNKOWN_POST_TYPE
+            return HivePostIdentifier.NO_LIL_TABLE_LIL_POST_TYPE
+
+        if title.startswith('lil') and 'lil' in post.cachedTags and '<table class="lil">' in post.body:
+            return HivePostIdentifier.LIL_POST_TYPE
 
         if 'let\'s make a collage' in body and 'round' in body and ('letsmakeacollage' in post.cachedTags or 'lmac' in post.cachedTags):
             return HivePostIdentifier.CONTEST_POST_TYPE
