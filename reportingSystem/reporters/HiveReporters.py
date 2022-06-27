@@ -1,3 +1,4 @@
+from monitoringSystem.agents import SourceBlacklistAgent
 from reportingSystem.Reporting import Reporter, SuspiciousActivityReport
 from services import HiveTools
 from services.HiveNetwork import HiveHandler
@@ -81,3 +82,28 @@ class ContestLinkHiveReporter(Reporter):
     def onStart(self, arguments: dict):
         pass
 
+
+class NOLILTableHiveReporter(Reporter):
+    _hiveHandler: HiveHandler
+    _templateEngine: TemplateEngine
+
+    def __init__(self):
+        self._hiveHandler = HiveHandler()
+        self._templateEngine = TemplateEngine()
+
+    def onNewReportAvailable(self, report: SuspiciousActivityReport):
+        if report.agentId != 'LIL No LIL table Agent':
+            return
+
+        self._hiveHandler.enqueueMessage(
+            report.author,
+            report.permlink,
+            self._templateEngine.createContent(
+                'lilMissingLILTable',
+                author=report.author,
+                postSubject='LIL'
+            )
+        )
+
+    def onStart(self, arguments: dict):
+        pass
