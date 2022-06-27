@@ -1,4 +1,4 @@
-from reportingSystem.Reporting import Reporter, SuspiciousActivityReport, SuspiciousActivityLevel
+from reportingSystem.Reporting import Reporter, SuspiciousActivityReport
 from services.Discord import DiscordDispatcher
 
 
@@ -25,4 +25,3 @@ class ViolationReporter(Reporter):
 
     def onStart(self, arguments: dict):
         self._settingsByLevel = arguments['settingsByLevel']
-
