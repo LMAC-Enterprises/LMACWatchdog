@@ -56,6 +56,6 @@ class SourceBlacklistAgent(Agent, ABC):
                     urlsCount=len(unwantedUrlsFound),
                     unwantedUrls=unwantedUrlsFound
                 )
-            ), MuteHivePostAction(post, 'Use of non-compliant image sources.')
+            ), None
 
         return None, None

@@ -9,6 +9,7 @@ class SuspiciousActivityLevel:
     ALERT: int = 3
     CONVICTION_DETECTED: int = 4
     SPAMMING: int = 5
+    MISTAKE: int = 6
 
 
 class SuspiciousActivityReport:
