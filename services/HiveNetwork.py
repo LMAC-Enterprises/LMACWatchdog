@@ -1,6 +1,8 @@
+import datetime
 import json
 
 import beemstorage
+import pytz
 from beem import Hive
 from beem.account import Account
 from beem.comment import Comment
@@ -79,7 +81,7 @@ class HiveComment(Comment):
     _cachedVotes: dict
 
     @staticmethod
-    def convert(post: Comment):
+    def convert(post: Comment) -> 'HiveComment':
         post.__class__ = HiveComment
         post._cachedVotes = {}
         post._cachedTags = []
@@ -119,6 +121,9 @@ class HiveComment(Comment):
 
         return self._cachedTags
 
+    @property
+    def ageInSeconds(self):
+        return (datetime.datetime.utcnow().replace(tzinfo=pytz.UTC) - self['created']).seconds
 
 class QueuedPostToMute:
     _hiveComment: HiveComment
@@ -207,16 +212,21 @@ class HiveHandler:
 
         return True
 
-    def loadNewestCommunityPosts(self, hiveCommunityId: str, communityTags: list) -> bool:
+    def loadNewestCommunityPosts(self, hiveCommunityId: str, communityTags: list, minimumAgeInSeconds: int = 3600) -> bool:
         posts = []
         for communityTag in communityTags:
             q = Query(limit=100, tag=communityTag)
             try:
                 for post in Discussions_by_created(q, blockchain_instance=self._hiveWallet.hive):
                     postLink: str = '@{author}/{permlink}'.format(author=post.author, permlink=post.permlink)
+                    post: HiveComment = HiveComment.convert(post)
+
                     if post.category != hiveCommunityId:
                         continue
                     if self._wasPostAlreadyMonitored(postLink):
+                        continue
+
+                    if post.ageInSeconds < minimumAgeInSeconds:
                         continue
 
                     self._markPostAsMonitored(postLink)
@@ -227,7 +237,7 @@ class HiveHandler:
         for post in posts:
             if self._shouldThisPostBeIgnored(post):
                 continue
-            self._callOnPostLoadedHandlers(HiveComment.convert(post))
+            self._callOnPostLoadedHandlers(post)
 
         return True
 
