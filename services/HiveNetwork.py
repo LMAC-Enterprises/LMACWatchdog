@@ -58,6 +58,7 @@ class HiveWallet:
     def muteInCommunity(self, comment: Comment, reason: str):
         self._hiveCommunity.mute_post(comment.author, comment.permlink, reason, self._username)
 
+
 class QueuedHiveMessage:
     _toAuthor: str
     _topPermlink: str
@@ -125,6 +126,7 @@ class HiveComment(Comment):
     def ageInSeconds(self):
         return (datetime.datetime.utcnow().replace(tzinfo=pytz.UTC) - self['created']).seconds
 
+
 class QueuedPostToMute:
     _hiveComment: HiveComment
     _reason: str
@@ -163,6 +165,7 @@ class HiveHandler:
             cls._hiveWallet = None
             cls._onPostLoadedHandlers = []
             cls._onReplyLoadedHandlers = []
+            cls._onPostLoadedEarlyHandlers = []
             cls._queuedMessages = []
             cls._muteQueue = []
             cls._registryHandler = RegistryHandler()
@@ -188,6 +191,13 @@ class HiveHandler:
     def _callOnPostLoadedHandlers(self, post: HiveComment):
         for handler in self._onPostLoadedHandlers:
             handler(post)
+
+    def _callOnPostLoadedEarlyHandlers(self, post: HiveComment):
+        for handler in self._onPostLoadedEarlyHandlers:
+            handler(post)
+
+    def addOnPostLoadedEarlyHandler(self, handlerCallback):
+        self._onPostLoadedEarlyHandlers.append(handlerCallback)
 
     def addOnReplyLoadedHandler(self, handlerCallback):
         self._onReplyLoadedHandlers.append(handlerCallback)
@@ -223,6 +233,9 @@ class HiveHandler:
 
                     if post.category != hiveCommunityId:
                         continue
+
+                    self._callOnPostLoadedEarlyHandlers(post)
+
                     if self._wasPostAlreadyMonitored(postLink):
                         continue
 

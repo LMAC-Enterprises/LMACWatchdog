@@ -83,7 +83,11 @@ def main(arguments: dict) -> int:
         },
         policyActionSupervisor,
         reportDispatcher,
-        _onAgentSupervisorProgress
+        _onAgentSupervisorProgress,
+        Configuration.voterToCheck,
+        Configuration.maxVoteTimeToCheckInSeconds,
+        Configuration.dispatcherDiscordNotificationChannel,
+        Configuration.hiveUser
     )
 
     agentSupervisor.exceptAuthors = Configuration.exceptAuthors

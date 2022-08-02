@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Tuple, Callable
 
 from actionSystem.ActionHandling import PolicyAction, PolicyActionSupervisor
+from services.Discord import DiscordDispatcher
 from services.HiveNetwork import HiveHandler, HiveComment
 from reportingSystem.Reporting import SuspiciousActivityReport, ReportDispatcher
 from services.Registry import RegistryHandler
@@ -31,10 +32,15 @@ class AgentSupervisor:
     _hiveHandler: HiveHandler
     _exceptAuthors: list
     _monitoredPostsCount: int
+    _voterToCheck: str
+    _maxVoteTimeToCheck: int
+    _generalNotificationsDiscordChannelId: int
+    _botName: str
 
     def __init__(self, hiveCommunityId: str, hiveCommunityTag, agentsInfo: dict,
                  policyActionSupervisor: PolicyActionSupervisor, reportDispatcher: ReportDispatcher,
-                 progressCallback: Callable[[str], None]):
+                 progressCallback: Callable[[str], None], voterToCheck: str, maxVoteTimeToCheck: int,
+                 generalNotificationsDiscordChannelId: int, botName: str):
         self._agents = []
 
         for agentClass in agentsInfo.keys():
@@ -48,12 +54,17 @@ class AgentSupervisor:
         self._hiveHandler = HiveHandler()
         self._hiveHandler.addOnPostLoadedHandler(self.onHivePostLoaded)
         self._hiveHandler.addOnReplyLoadedHandler(self.onHiveReplyLoaded)
+        self._hiveHandler.addOnPostLoadedEarlyHandler(self.onHivePostLoadedEarly)
         self._registryHandler = RegistryHandler()
         self._reports = []
         self._policyActionSupervisor = policyActionSupervisor
         self._reportDispatcher = reportDispatcher
         self._progressCallback = progressCallback
         self._exceptAuthors = []
+        self._voterToCheck = voterToCheck
+        self._maxVoteTimeToCheck = maxVoteTimeToCheck
+        self._generalNotificationsDiscordChannelId = generalNotificationsDiscordChannelId
+        self._botName = botName
 
     @property
     def exceptAuthors(self) -> list:
@@ -63,8 +74,36 @@ class AgentSupervisor:
     def exceptAuthors(self, authors: list):
         self._exceptAuthors = authors
 
-    def _checkPostNotVoted(self, post: HiveComment):
-        alreadyProcessedReplies = self._registryHandler.getProperty('MonitoringAgency', 'alreadyProcessedReplies', [])
+    def _wasCommentedByBot(self, post) -> bool:
+        comments: list = post.get_all_replies(post)
+        for comment in comments:
+            if comment.author == self._botName:
+                return True
+
+        return False
+
+    def _checkPostNotVotedInTime(self, post: HiveComment):
+        return not self._wasMissingVoteInTimeAlreadyNotified(post) and self._voterToCheck not in post.cachedVotes.keys() \
+               and post.ageInSeconds > self._maxVoteTimeToCheck and not self._wasCommentedByBot(post)
+
+    def _wasMissingVoteInTimeAlreadyNotified(self, post: HiveComment):
+        return post.authorperm in self._registryHandler.getProperty(
+            'MonitoringAgency', 'alreadyNotifiedMissingVotes', [])
+
+    def _notifyAboutMissingVoteInTime(self, post: HiveComment):
+        missingVotes = self._registryHandler.getProperty(
+            'MonitoringAgency', 'alreadyNotifiedMissingVotes', [])
+        missingVotes.append(post.authorperm)
+        if len(missingVotes) > AgentSupervisor.MAX_SAVED_ALREADY_PROCESSED_REPLIES:
+            missingVotes.pop(0)
+
+        self._registryHandler.setProperty(
+            'MonitoringAgency', 'alreadyNotifiedMissingVotes', missingVotes)
+
+        discordDispatcher = DiscordDispatcher()
+        discordDispatcher.enterChatroom(self._generalNotificationsDiscordChannelId)
+        discordDispatcher.enqueueMessage('http://peakd.com/{authorPerm} has not yet been voted and is older than {maxAge} hours.'.format(
+            authorPerm=post.authorperm, postTime=post.time_elapsed(), maxAge=(self._maxVoteTimeToCheck / 60) / 60))
 
     def onHiveReplyLoaded(self, reply: HiveComment):
         if reply.author in self.exceptAuthors:
@@ -90,11 +129,13 @@ class AgentSupervisor:
 
         self._registryHandler.setProperty('MonitoringAgency', 'alreadyProcessedReplies', alreadyProcessedReplies)
 
+    def onHivePostLoadedEarly(self, post: HiveComment):
+        if self._checkPostNotVotedInTime(post):
+            self._notifyAboutMissingVoteInTime(post)
+
     def onHivePostLoaded(self, post: HiveComment):
         if post.author in self.exceptAuthors:
             return
-
-        self._checkPostNotVoted(post)
 
         self._monitoredPostsCount += 1
 
