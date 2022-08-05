@@ -47,6 +47,6 @@ class LILBeneficiaryAgent(Agent, ABC):
                     urlsCount=len(lilUrlsFound),
                     lilUrls='\n'.join(lilUrlsFound)
                 )
-            ), MuteHivePostAction(post, 'Missing 2% beneficiaries per LIL image.')
+            ), None # MUTE ACTION REMOVED DUE TO EMERGENCY DECISION.
 
         return None, None
