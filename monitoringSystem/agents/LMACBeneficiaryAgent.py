@@ -2,7 +2,7 @@ from abc import ABC
 from typing import Tuple
 
 from actionSystem.ActionHandling import PolicyAction
-from actionSystem.actions.MuteHivePostAction import MuteHivePostAction
+from actionSystem.actions.MuteHivePostAction import MuteHivePostAction, NullAction
 from services import HiveTools
 from services.HiveNetwork import HiveComment
 from monitoringSystem.MonitoringAgency import Agent
@@ -41,7 +41,7 @@ class LMACBeneficiaryAgent(Agent, ABC):
                 'iMac typo in "@{requiredBeneficiary}" beneficiary.'.format(
                     requiredBeneficiary=self._requiredBeneficiary),
                 {'postType': postType}
-            ), MuteHivePostAction(post, 'lmac beneficiary not set.')
+            ), None  # REMOVED DUE TO EMERGENCY DECISION: MuteHivePostAction(post, 'lmac beneficiary set to low.')
 
         if self._requiredBeneficiary in post.cachedBeneficiaries.keys():
             if post.cachedBeneficiaries[self._requiredBeneficiary] < self._minimumBenefication:
@@ -53,7 +53,7 @@ class LMACBeneficiaryAgent(Agent, ABC):
                     'Insufficient beneficiary weight set for @{requiredBeneficiary}.'.format(
                         requiredBeneficiary=self._requiredBeneficiary),
                     {'postType': postType}
-                ), MuteHivePostAction(post, 'lmac beneficiary set to low.')
+                ), None  # REMOVED DUE TO EMERGENCY DECISION: MuteHivePostAction(post, 'lmac beneficiary set to low.')
         else:
             return SuspiciousActivityReport(
                 post.author,
@@ -62,6 +62,6 @@ class LMACBeneficiaryAgent(Agent, ABC):
                 SuspiciousActivityLevel.WARNING,
                 'Beneficiary not set for @{requiredBeneficiary}.'.format(requiredBeneficiary=self._requiredBeneficiary),
                 {'postType': postType}
-            ), MuteHivePostAction(post, 'lmac beneficiary not set.')
+            ), None  # REMOVED DUE TO EMERGENCY DECISION: MuteHivePostAction(post, 'lmac beneficiary not set.')
 
         return None, None
