@@ -53,6 +53,6 @@ class ContestLinkAgent(Agent, ABC):
                     self._agentId,
                     SuspiciousActivityLevel.WARNING,
                     'Contest link not found.'
-                ), MuteHivePostAction(post, 'LMAC rule violation: Missing contest link.')
+                ), # MUTE ACTION REMOVED DUE TO EMERGENCY DECISION.
 
         return None, None
