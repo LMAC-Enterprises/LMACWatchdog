@@ -10,6 +10,7 @@ class SuspiciousActivityLevel:
     CONVICTION_DETECTED: int = 4
     SPAMMING: int = 5
     MISTAKE: int = 6
+    BLACKLISTED_USER: int = 7
 
 
 class SuspiciousActivityReport:
