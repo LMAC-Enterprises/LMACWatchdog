@@ -4,7 +4,7 @@ import time
 from Configuration import Configuration
 from actionSystem.ActionHandling import PolicyActionSupervisor
 from monitoringSystem.agents import LMACBeneficiaryAgent, SourceBlacklistAgent, SuspectHunterAgent, \
-    LILBeneficiaryAgent, BadWordsAgent, ContestLinkAgent, LILNoLILTableAgent
+    LILBeneficiaryAgent, ContestLinkAgent, LILNoLILTableAgent, UserBlacklistAgent
 from monitoringSystem.MonitoringAgency import AgentSupervisor
 from reportingSystem.Reporting import ReportDispatcher
 from reportingSystem.reporters import LogReporter, DiscordReporters, HiveReporters
@@ -61,7 +61,9 @@ def main(arguments: dict) -> int:
             HiveReporters.ContestLinkHiveReporter: {},
             HiveReporters.LILBeneficiaryHiveReporter: {},
             HiveReporters.LMACBeneficiaryHiveReporter: {},
-            HiveReporters.NOLILTableHiveReporter: {}
+            HiveReporters.NOLILTableHiveReporter: {},
+            DiscordReporters.BlacklistedUserReporter: {
+                'reportInDiscordChannelId': Configuration.blacklistedUserReportDiscordChannel}
         },
         Configuration.dispatcherDiscordNotificationChannel
     )
@@ -79,7 +81,8 @@ def main(arguments: dict) -> int:
             SuspectHunterAgent.SuspectHunterAgent: Configuration.suspectHunterAgentRules,
             # BadWordsAgent.BadWordsAgent: Configuration.badWordsAgentRules,
             ContestLinkAgent.ContestLinkAgent: Configuration.contestLinkAgentRules,
-            LILNoLILTableAgent.LILNoLILTableAgent: {}
+            LILNoLILTableAgent.LILNoLILTableAgent: {},
+            UserBlacklistAgent.UserBlacklistAgent: Configuration.userBlacklistAgentRules
         },
         policyActionSupervisor,
         reportDispatcher,
