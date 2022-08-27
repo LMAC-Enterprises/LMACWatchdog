@@ -9,6 +9,7 @@ class Configuration(BaseConfiguration):
     delayBetweenSendingHiveComments: float = 5.0  # Seconds
     delayBetweenMutingHiveComments: float = 5.0  # Seconds
     hiveApiUrl: str = 'https://api.deathwing.me'
+    hiveUser: str = 'lilybee'
 
     sourceBlacklistAgentRules: dict = {
         'blacklist': [
@@ -48,12 +49,20 @@ class Configuration(BaseConfiguration):
     agentSupervisorSettings: dict = {'hiveCommunityId': 'hive-174695', 'hiveCommunityTags': ['letsmakeacollage', 'lmac', 'lil', 'hive-174695']}
 
     violationReporterSettings: dict = {'settingsByLevel': {
-        SuspiciousActivityLevel.WARNING: {'discordTargetChatroom': 912062389736853504},
-        SuspiciousActivityLevel.VIOLATION: {'discordTargetChatroom': 912062389736853504},
-        SuspiciousActivityLevel.CONVICTION_DETECTED: {'discordTargetChatroom': 912062389736853504}
+        SuspiciousActivityLevel.WARNING: {'discordTargetChatroom': 0},
+        SuspiciousActivityLevel.VIOLATION: {'discordTargetChatroom': 0},
+        SuspiciousActivityLevel.CONVICTION_DETECTED: {'discordTargetChatroom': 0}
     }}
 
     contestLinkAgentRules: dict = {
         'moderators': ['shaka', 'lmac'],
         'mandatoryContestHashtag': 'letsmakeacollage'
     }
+
+    userBlacklistAgentRules: dict = {
+        'sourceUrl': ''
+    }
+
+    dispatcherDiscordNotificationChannel: int = 0
+    blacklistedUserReportDiscordChannel: int = 0
+
