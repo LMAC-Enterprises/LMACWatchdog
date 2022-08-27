@@ -125,6 +125,11 @@ class HiveComment(Comment):
     def ageInSeconds(self):
         return (datetime.datetime.utcnow().replace(tzinfo=pytz.UTC) - self['created']).seconds
 
+    @property
+    def ageInDays(self):
+        return (datetime.datetime.utcnow().replace(tzinfo=pytz.UTC) - self['created']).days
+
+
 class QueuedPostToMute:
     _hiveComment: HiveComment
     _reason: str
@@ -227,6 +232,9 @@ class HiveHandler:
                         continue
 
                     if post.ageInSeconds < minimumAgeInSeconds:
+                        continue
+
+                    if post.ageInDays > 7:
                         continue
 
                     self._markPostAsMonitored(postLink)
