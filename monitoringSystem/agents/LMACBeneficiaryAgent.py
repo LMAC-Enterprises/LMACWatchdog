@@ -2,7 +2,7 @@ from abc import ABC
 from typing import Tuple
 
 from actionSystem.ActionHandling import PolicyAction
-from actionSystem.actions.MuteHivePostAction import MuteHivePostAction, NullAction
+from actionSystem.actions.MuteHivePostAction import MuteHivePostAction
 from services import HiveTools
 from services.HiveNetwork import HiveComment
 from monitoringSystem.MonitoringAgency import Agent
