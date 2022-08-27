@@ -46,13 +46,12 @@ class ContestLinkAgent(Agent, ABC):
 
         if self._isContestPost(post):
             if not self._hasContestLink(post.body):
-                print(post.title)
                 return SuspiciousActivityReport(
                     post.author,
                     post.permlink,
                     self._agentId,
                     SuspiciousActivityLevel.WARNING,
                     'Contest link not found.'
-                ), # MUTE ACTION REMOVED DUE TO EMERGENCY DECISION.
+                ), None # MUTE ACTION REMOVED DUE TO EMERGENCY DECISION.
 
         return None, None
