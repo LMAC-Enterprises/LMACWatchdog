@@ -59,6 +59,10 @@ class AgentSupervisor:
     def exceptAuthors(self) -> list:
         return self._exceptAuthors
 
+    @exceptAuthors.setter
+    def exceptAuthors(self, authors: list):
+        self._exceptAuthors = authors
+
     def _checkPostNotVoted(self, post: HiveComment):
         alreadyProcessedReplies = self._registryHandler.getProperty('MonitoringAgency', 'alreadyProcessedReplies', [])
 
