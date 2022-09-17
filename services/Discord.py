@@ -1,4 +1,7 @@
+from typing import Any
+
 import discord as discord
+from discord import Intents
 from discord.ext import tasks
 
 
@@ -29,16 +32,17 @@ class DiscordMessageTransponder(discord.Client):
     _channelId: int
     _messages: list
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *, intents: Intents, **options: Any):
+        super().__init__(intents=intents, **options)
 
-        self._messages = kwargs['messages']
+        self._messages = options['messages']
         # start the task to run in the background
-        self._sendMessagesTask.start()
+
 
     async def on_ready(self):
         print(f'Logged in as {self.user} (ID: {self.user.id})')
         print('------')
+        self._sendMessagesTask.start()
 
     @tasks.loop(seconds=5)
     async def _sendMessagesTask(self):
@@ -86,7 +90,9 @@ class DiscordDispatcher:
         if len(self._messageQueue) == 0:
             return
 
-        transponder = DiscordMessageTransponder(messages=self._messageQueue)
+        intents = discord.Intents.default()
+
+        transponder = DiscordMessageTransponder(messages=self._messageQueue, intents=intents)
         transponder.run(discordToken)
 
     def setSimulationMode(self, simulate: bool):
