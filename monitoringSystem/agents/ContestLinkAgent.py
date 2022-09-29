@@ -1,7 +1,7 @@
 import re
 
 from abc import ABC
-from typing import Tuple
+from typing import Tuple, Optional
 
 from actionSystem.ActionHandling import PolicyAction
 from services.AspectLogging import LogAspect
@@ -40,7 +40,7 @@ class ContestLinkAgent(Agent, ABC):
 
         return HivePostIdentifier.getPostType(post) == HivePostIdentifier.CONTEST_POST_TYPE
 
-    def onSuspicionQuery(self, post: HiveComment) -> Tuple[SuspiciousActivityReport, PolicyAction]:
+    def onSuspicionQuery(self, post: HiveComment) -> Tuple[Optional[SuspiciousActivityReport], Optional[PolicyAction]]:
 
         if self._isContestPost(post):
             if not self._hasContestLink(post.body):

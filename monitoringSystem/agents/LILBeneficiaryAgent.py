@@ -1,6 +1,6 @@
 import re
 from abc import ABC
-from typing import Tuple
+from typing import Tuple, Optional
 
 from actionSystem.ActionHandling import PolicyAction
 from actionSystem.actions.MuteHivePostAction import MuteHivePostAction
@@ -28,7 +28,7 @@ class LILBeneficiaryAgent(Agent, ABC):
             urls.append(urlMatch)
         return urls
 
-    def onSuspicionQuery(self, post: HiveComment) -> Tuple[SuspiciousActivityReport, PolicyAction]:
+    def onSuspicionQuery(self, post: HiveComment) -> Tuple[Optional[SuspiciousActivityReport], Optional[PolicyAction]]:
 
         if HiveTools.HivePostIdentifier.getPostType(post) != HiveTools.HivePostIdentifier.CONTEST_POST_TYPE:
             return None, None

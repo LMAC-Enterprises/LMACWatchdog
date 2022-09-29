@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Tuple, Callable
+from typing import Tuple, Callable, Optional
 
 from actionSystem.ActionHandling import PolicyAction, PolicyActionSupervisor
 from services.HiveNetwork import HiveHandler, HiveComment
@@ -18,7 +18,7 @@ class Agent(ABC):
         pass
 
     @abstractmethod
-    def onSuspicionQuery(self, post: HiveComment) -> Tuple[SuspiciousActivityReport, PolicyAction]:
+    def onSuspicionQuery(self, post: HiveComment) -> Tuple[Optional[SuspiciousActivityReport], Optional[PolicyAction]]:
         pass
 
 

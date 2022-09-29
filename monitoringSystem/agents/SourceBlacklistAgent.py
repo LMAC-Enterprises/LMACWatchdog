@@ -1,6 +1,6 @@
 import re
 from abc import ABC
-from typing import Tuple
+from typing import Tuple, Optional
 
 from actionSystem.ActionHandling import PolicyAction
 from actionSystem.actions.MuteHivePostAction import MuteHivePostAction
@@ -32,7 +32,7 @@ class SourceBlacklistAgent(Agent, ABC):
     def _isContestPost(post: HiveComment):
         return HivePostIdentifier.getPostType(post) == HivePostIdentifier.CONTEST_POST_TYPE
 
-    def onSuspicionQuery(self, post: HiveComment) -> Tuple[SuspiciousActivityReport, PolicyAction]:
+    def onSuspicionQuery(self, post: HiveComment) -> Tuple[Optional[SuspiciousActivityReport], Optional[PolicyAction]]:
 
         if not self._isContestPost(post):
             return None, None

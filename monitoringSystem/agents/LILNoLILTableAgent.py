@@ -1,6 +1,6 @@
 import re
 from abc import ABC
-from typing import Tuple
+from typing import Tuple, Optional
 
 from actionSystem.ActionHandling import PolicyAction
 from actionSystem.actions.MuteHivePostAction import MuteHivePostAction
@@ -19,7 +19,7 @@ class LILNoLILTableAgent(Agent, ABC):
     def onSetupRules(self, rules: dict):
         pass
 
-    def onSuspicionQuery(self, post: HiveComment) -> Tuple[SuspiciousActivityReport, PolicyAction]:
+    def onSuspicionQuery(self, post: HiveComment) -> Tuple[Optional[SuspiciousActivityReport], Optional[PolicyAction]]:
 
         if HiveTools.HivePostIdentifier.getPostType(post) != HiveTools.HivePostIdentifier.NO_LIL_TABLE_LIL_POST_TYPE:
             return None, None

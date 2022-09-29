@@ -1,8 +1,7 @@
 from abc import ABC
-from typing import Tuple
+from typing import Tuple, Optional
 
 from actionSystem.ActionHandling import PolicyAction
-from actionSystem.actions.MuteHivePostAction import MuteHivePostAction
 from services import HiveTools
 from services.HiveNetwork import HiveComment
 from monitoringSystem.MonitoringAgency import Agent
@@ -22,7 +21,7 @@ class LMACBeneficiaryAgent(Agent, ABC):
         self._minimumBenefication = rules['minimumBenefication']
         self._requiredBeneficiary = rules['requiredBeneficiary']
 
-    def onSuspicionQuery(self, post: HiveComment) -> Tuple[SuspiciousActivityReport, PolicyAction]:
+    def onSuspicionQuery(self, post: HiveComment) -> Tuple[Optional[SuspiciousActivityReport], Optional[PolicyAction]]:
         if HiveTools.HivePostIdentifier.getPostType(post) != HiveTools.HivePostIdentifier.CONTEST_POST_TYPE and \
                 HiveTools.HivePostIdentifier.getPostType(post) != HiveTools.HivePostIdentifier.LIL_POST_TYPE:
             return None, None

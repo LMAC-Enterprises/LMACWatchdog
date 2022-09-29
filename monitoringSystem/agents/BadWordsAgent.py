@@ -1,6 +1,6 @@
 import nltk
 from abc import ABC
-from typing import Tuple
+from typing import Tuple, Optional
 
 from actionSystem.ActionHandling import PolicyAction
 from services.HiveNetwork import HiveComment
@@ -28,7 +28,7 @@ class BadWordsAgent(Agent, ABC):
 
         return foundBadWords
 
-    def onSuspicionQuery(self, post: HiveComment) -> Tuple[SuspiciousActivityReport, PolicyAction]:
+    def onSuspicionQuery(self, post: HiveComment) -> Tuple[Optional[SuspiciousActivityReport], Optional[PolicyAction]]:
 
         badWordsFound = self._findBadWords(post.body)
 
