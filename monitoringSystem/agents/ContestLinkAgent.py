@@ -1,11 +1,9 @@
 import re
 
-import nltk
 from abc import ABC
 from typing import Tuple
 
 from actionSystem.ActionHandling import PolicyAction
-from actionSystem.actions.MuteHivePostAction import MuteHivePostAction
 from services.AspectLogging import LogAspect
 from services.HiveNetwork import HiveComment
 from monitoringSystem.MonitoringAgency import Agent

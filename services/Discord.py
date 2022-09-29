@@ -38,7 +38,6 @@ class DiscordMessageTransponder(discord.Client):
         self._messages = options['messages']
         # start the task to run in the background
 
-
     async def on_ready(self):
         print(f'Logged in as {self.user} (ID: {self.user.id})')
         print('------')

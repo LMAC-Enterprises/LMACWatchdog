@@ -59,7 +59,6 @@ class UserBlacklistAgent(Agent, ABC):
     def _loadBlacklistFromSource(self):
         blockPattern = r'<div id=\"doc\".*?>(.*?)</div>'
         startIndicator = '### Blacklist in alphabetic order\n\n'
-        print(self._sourceUrl)
         r = urllib.request.urlopen(self._sourceUrl)
         text = r.read().decode('utf-8')
         matchesBlock = re.findall(blockPattern, text, re.DOTALL)
