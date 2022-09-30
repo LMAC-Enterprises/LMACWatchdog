@@ -1,5 +1,4 @@
 import re
-import time
 import urllib.request
 import urllib.error
 
@@ -18,10 +17,9 @@ class BlacklistHandler:
 
     def _loadBlacklist(self) -> list:
         registry = RegistryHandler()
-        currentTimestamp = int(time.time())
         blacklistInfo = registry.getProperty('UserBlacklistAgent', 'blacklistInfo', {'blacklist': []})
         newBlacklist = self._loadBlacklistFromSource()
-        if len(blacklistInfo['blacklist']) > 0  and not newBlacklist:
+        if len(blacklistInfo['blacklist']) > 0 and not newBlacklist:
             return blacklistInfo['blacklist']
         elif len(blacklistInfo['blacklist']) == 0 and not newBlacklist:
             return []
@@ -29,7 +27,7 @@ class BlacklistHandler:
         blacklistInfo['blacklist'] = newBlacklist
         registry.setProperty('UserBlacklistAgent', 'blacklistInfo', blacklistInfo)
 
-        return blacklistInfo['blacklist']
+        return newBlacklist
 
     def _loadBlacklistFromSource(self):
         blockPattern = r'<div id=\"doc\".*?>(.*?)</div>'
@@ -49,4 +47,7 @@ class BlacklistHandler:
 
     def isBlacklisted(self, name: str):
         return name in self._blacklist
+
+    def isEmpty(self):
+        return len(self._blacklist) == 0
 
