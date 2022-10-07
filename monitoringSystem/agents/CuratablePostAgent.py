@@ -6,6 +6,7 @@ from services.Blacklisting import BlacklistHandler
 from services.HiveNetwork import HiveComment
 from monitoringSystem.MonitoringAgency import Agent
 from reportingSystem.Reporting import SuspiciousActivityReport, SuspiciousActivityLevel
+from services.HiveTools import HivePostIdentifier
 
 
 class CuratablePostAgent(Agent, ABC):
@@ -29,7 +30,8 @@ class CuratablePostAgent(Agent, ABC):
                 SuspiciousActivityLevel.NEW_CURATABLE_CONTRIBUTION,
                 'https://peakd.com/{authorperm}'.format(
                     authorperm=post.authorperm
-                )
+                ),
+                {'postType': HivePostIdentifier.getPostType(post)}
             ), None
 
         return None, None
