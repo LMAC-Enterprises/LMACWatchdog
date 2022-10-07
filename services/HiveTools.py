@@ -48,4 +48,7 @@ class HivePostIdentifier:
                 'round' in title or 'contest' in title or 'collage' in title or 'rondo' in title or 'concurso' in title or 'lmac special' in title or 'prize pool' in title):
             return HivePostIdentifier.CONTEST_POST_TYPE
 
+        if 'letsmakeacollage' in post.cachedTags and 'let\'s make a collage' in title:
+            return HivePostIdentifier.CONTEST_POST_TYPE
+
         return HivePostIdentifier.UNKOWN_POST_TYPE
