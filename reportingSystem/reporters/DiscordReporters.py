@@ -1,5 +1,6 @@
 from reportingSystem.Reporting import Reporter, SuspiciousActivityReport, SuspiciousActivityLevel
 from services.Discord import DiscordDispatcher
+from services.HiveTools import HivePostIdentifier
 
 
 class ViolationReporter(Reporter):
@@ -62,9 +63,24 @@ class CuratablePostReporter(Reporter):
         if report.activityLevel != SuspiciousActivityLevel.NEW_CURATABLE_CONTRIBUTION:
             return
 
+        if 'postType' not in report.meta or report.meta['postType'] == HivePostIdentifier.UNKOWN_POST_TYPE:
+            postTypeText = 'Unknown post type.'
+        else:
+            if report.meta['postType'] == HivePostIdentifier.CONTEST_POST_TYPE:
+                postTypeText = 'Contest entry.'
+            elif report.meta['postType'] == HivePostIdentifier.LIL_POST_TYPE:
+                postTypeText = 'LIL contribution.'
+            elif report.meta['postType'] == HivePostIdentifier.TUTORIAL_POST_TYPE:
+                postTypeText = 'Tutorial.'
+            elif report.meta['postType'] == HivePostIdentifier.NO_LIL_TABLE_LIL_POST_TYPE:
+                postTypeText = 'Could be a LIL contribution. But the LIL table is missing.'
+            else:
+                postTypeText = 'Unknown post type.'
+
         self._discordDispatcher.enterChatroom(self._reportInDiscordChannelId)
         self._discordDispatcher.enqueueMessage(
-            'https://peakd.com/@{author}/{permlink}'.format(
+            '{postType}\nhttps://peakd.com/@{author}/{permlink}'.format(
+                postType=postTypeText,
                 permlink=report.permlink,
                 author=report.author
             )
