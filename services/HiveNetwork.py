@@ -118,6 +118,7 @@ class HiveComment(Comment):
             jsonData = json.loads(self.json()['json_metadata'])
 
             self._cachedTags = jsonData['tags'] if 'tags' in jsonData.keys() else []
+            self._cachedTags = [x.lower() for x in self._cachedTags]
 
         return self._cachedTags
 
