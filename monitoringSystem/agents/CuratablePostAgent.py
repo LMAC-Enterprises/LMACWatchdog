@@ -22,6 +22,9 @@ class CuratablePostAgent(Agent, ABC):
         if self._blacklistHandler.isEmpty():
             return None, None
 
+        if self._agentSupervisor.wasPostAlreadyObjectedDuringCurrentSession(post.authorperm):
+            return None, None
+
         if not self._blacklistHandler.isBlacklisted(post.author) and 'lmac' not in post.cachedVotes.keys():
             return SuspiciousActivityReport(
                 post.author,
