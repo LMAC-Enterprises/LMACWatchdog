@@ -9,9 +9,14 @@ from services.Registry import RegistryHandler
 
 class Agent(ABC):
     _agentId: str
+    _agentSupervisor: Optional['AgentSupervisor']
 
     def __init__(self, agentId):
         self._agentId = agentId
+        self._agentSupervisor = None
+
+    def initialize(self, agentSupervisor: 'AgentSupervisor'):
+        self._agentSupervisor = agentSupervisor
 
     @abstractmethod
     def onSetupRules(self, rules: dict):
@@ -31,6 +36,7 @@ class AgentSupervisor:
     _hiveHandler: HiveHandler
     _exceptAuthors: list
     _monitoredPostsCount: int
+    _objectedPosts: list
 
     def __init__(self, hiveCommunityId: str, hiveCommunityTag, agentsInfo: dict,
                  policyActionSupervisor: PolicyActionSupervisor, reportDispatcher: ReportDispatcher,
@@ -39,6 +45,7 @@ class AgentSupervisor:
 
         for agentClass in agentsInfo.keys():
             agent: Agent = agentClass()
+            agent.initialize(self)
             agent.onSetupRules(agentsInfo[agentClass])
             self._agents.append(agent)
 
@@ -54,6 +61,7 @@ class AgentSupervisor:
         self._reportDispatcher = reportDispatcher
         self._progressCallback = progressCallback
         self._exceptAuthors = []
+        self._objectedPosts = []
 
     @property
     def exceptAuthors(self) -> list:
@@ -101,6 +109,7 @@ class AgentSupervisor:
 
             if suspiciousActivityReport is not None:
                 self._reportDispatcher.handOverReport(suspiciousActivityReport)
+                self._objectedPosts.append(post.authorperm)
             if action is not None:
                 self._policyActionSupervisor.suggestAction(action)
 
@@ -122,3 +131,6 @@ class AgentSupervisor:
 
     def _reportProgress(self, reachedTheTask: str):
         self._progressCallback(reachedTheTask)
+
+    def wasPostAlreadyObjectedDuringCurrentSession(self, authorPerm: str):
+        return authorPerm in self._objectedPosts
