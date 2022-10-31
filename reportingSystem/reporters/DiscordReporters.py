@@ -60,8 +60,14 @@ class CuratablePostReporter(Reporter):
         self._reportInDiscordChannelId = 0
 
     def onNewReportAvailable(self, report: SuspiciousActivityReport):
-        if report.activityLevel != SuspiciousActivityLevel.NEW_CURATABLE_CONTRIBUTION:
+        if not (report.activityLevel == SuspiciousActivityLevel.NEW_CURATABLE_CONTRIBUTION
+                or report.activityLevel == SuspiciousActivityLevel.NEW_MAYBE_NOT_CURATABLE_CONTRIBUTION):
             return
+
+        additionalInfo: str = ''
+
+        if report.activityLevel == SuspiciousActivityLevel.NEW_MAYBE_NOT_CURATABLE_CONTRIBUTION:
+            additionalInfo = ':warning: This post is suspected of violating the rules. See #no-vote-list.\n'
 
         if 'postType' not in report.meta or report.meta['postType'] == HivePostIdentifier.UNKOWN_POST_TYPE:
             postTypeText = 'Unknown post type.'
@@ -79,10 +85,11 @@ class CuratablePostReporter(Reporter):
 
         self._discordDispatcher.enterChatroom(self._reportInDiscordChannelId)
         self._discordDispatcher.enqueueMessage(
-            '{postType}\nhttps://peakd.com/@{author}/{permlink}'.format(
+            '{info}{postType}\nhttps://peakd.com/@{author}/{permlink}'.format(
                 postType=postTypeText,
                 permlink=report.permlink,
-                author=report.author
+                author=report.author,
+                info=additionalInfo
             )
         )
 
