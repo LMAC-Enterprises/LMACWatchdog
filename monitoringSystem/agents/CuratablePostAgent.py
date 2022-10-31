@@ -23,7 +23,16 @@ class CuratablePostAgent(Agent, ABC):
             return None, None
 
         if self._agentSupervisor.wasPostAlreadyObjectedDuringCurrentSession(post.authorperm):
-            return None, None
+            return SuspiciousActivityReport(
+                post.author,
+                post.permlink,
+                self._agentId,
+                SuspiciousActivityLevel.NEW_MAYBE_NOT_CURATABLE_CONTRIBUTION,
+                'https://peakd.com/{authorperm}'.format(
+                    authorperm=post.authorperm
+                ),
+                {'postType': HivePostIdentifier.getPostType(post)}
+            ), None
 
         if not self._blacklistHandler.isBlacklisted(post.author) and 'lmac' not in post.cachedVotes.keys():
             return SuspiciousActivityReport(
