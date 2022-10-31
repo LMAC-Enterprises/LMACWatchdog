@@ -4,7 +4,6 @@ from services.Discord import DiscordDispatcher, DiscordMessage
 
 
 class SuspiciousActivityLevel:
-    NEW_CURATABLE_CONTRIBUTION: int = 8
     WARNING: int = 1
     VIOLATION: int = 2
     ALERT: int = 3
@@ -12,6 +11,8 @@ class SuspiciousActivityLevel:
     SPAMMING: int = 5
     MISTAKE: int = 6
     BLACKLISTED_USER: int = 7
+    NEW_CURATABLE_CONTRIBUTION: int = 8
+    NEW_MAYBE_NOT_CURATABLE_CONTRIBUTION = 9
 
 
 class SuspiciousActivityReport:
