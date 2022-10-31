@@ -51,4 +51,7 @@ class HivePostIdentifier:
         if 'letsmakeacollage' in post.cachedTags and 'let\'s make a collage' in title:
             return HivePostIdentifier.CONTEST_POST_TYPE
 
+        if 'to LMAC #' in title or 'let\'s make a collage round' in title:
+            return HivePostIdentifier.CONTEST_POST_TYPE
+
         return HivePostIdentifier.UNKOWN_POST_TYPE
