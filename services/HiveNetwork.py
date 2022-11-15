@@ -378,7 +378,7 @@ class HiveHandler:
             joinDate = datetime.datetime.strptime(self._subscribers[subscriber]['joined'], '%Y-%m-%dT%H:%M:%S')
             numMonths = (now.year - joinDate.year) * 12 + (now.month - joinDate.month)
 
-            if numMonths > 2:
+            if numMonths > 4:
                 del self._subscribers[subscriber]
 
     def getSubscriberInfo(self, subscriberName) -> Optional[Dict]:
