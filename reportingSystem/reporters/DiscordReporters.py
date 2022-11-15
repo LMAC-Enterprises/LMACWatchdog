@@ -78,7 +78,7 @@ class CuratablePostReporter(Reporter):
             joinedDate = '3 month+' if len(subscriberInfo['joined']) == 0 else str(datetime.strptime(
                 subscriberInfo['joined'], '%Y-%m-%dT%H:%M:%S'
             ))
-            additionalInfo += 'NEW USER! {author} joined us on {joined}, submitted at least {posts} posts to LMAC and has made at least {comments} comments in the community.'.format(
+            additionalInfo += '**NEW USER!**\n`{author} joined us on {joined}, submitted at least {posts} posts to LMAC and has made at least {comments} comments in the community.`\n'.format(
                 posts=subscriberInfo['posts'],
                 comments=subscriberInfo['comments'],
                 joined=joinedDate,
