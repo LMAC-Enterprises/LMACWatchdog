@@ -372,6 +372,15 @@ class HiveHandler:
                         'averageTrailVote': -1
                     }
 
+        # Clean-up
+        for subscriber in list(self._subscribers.keys()):
+            now = datetime.datetime.now()
+            joinDate = datetime.datetime.strptime(self._subscribers[subscriber]['joined'], '%Y-%m-%dT%H:%M:%S')
+            numMonths = (now.year - joinDate.year) * 12 + (now.month - joinDate.month)
+
+            if numMonths > 2:
+                del self._subscribers[subscriber]
+
     def getSubscriberInfo(self, subscriberName) -> Optional[Dict]:
         if subscriberName not in self._subscribers.keys():
             return None
