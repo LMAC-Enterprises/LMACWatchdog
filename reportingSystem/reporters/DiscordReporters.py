@@ -78,10 +78,11 @@ class CuratablePostReporter(Reporter):
             joinedDate = '3 month+' if len(subscriberInfo['joined']) == 0 else str(datetime.strptime(
                 subscriberInfo['joined'], '%Y-%m-%dT%H:%M:%S'
             ))
-            additionalInfo += '{author} joined us on {joined}, submitted {posts} posts to LMAC and has made {comments} comments in the community.'.format(
+            additionalInfo += 'NEW USER! {author} joined us on {joined}, submitted at least {posts} posts to LMAC and has made at least {comments} comments in the community.'.format(
                 posts=subscriberInfo['posts'],
                 comments=subscriberInfo['comments'],
-                joined=joinedDate
+                joined=joinedDate,
+                author=report.author
             )
 
         if 'postType' not in report.meta or report.meta['postType'] == HivePostIdentifier.UNKOWN_POST_TYPE:
