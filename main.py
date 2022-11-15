@@ -112,6 +112,7 @@ def main(arguments: dict) -> int:
             time.sleep(Configuration.delayBetweenMutingHiveComments)
 
     registryHandler.saveAll()
+    hiveHandler.finish()
 
     return EXITCODE_OK
 

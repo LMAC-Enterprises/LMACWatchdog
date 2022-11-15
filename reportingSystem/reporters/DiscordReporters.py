@@ -1,5 +1,8 @@
+from datetime import datetime
+
 from reportingSystem.Reporting import Reporter, SuspiciousActivityReport, SuspiciousActivityLevel
 from services.Discord import DiscordDispatcher
+from services.HiveNetwork import HiveHandler
 from services.HiveTools import HivePostIdentifier
 
 
@@ -68,6 +71,18 @@ class CuratablePostReporter(Reporter):
 
         if report.activityLevel == SuspiciousActivityLevel.NEW_MAYBE_NOT_CURATABLE_CONTRIBUTION:
             additionalInfo = ':warning: This post is suspected of violating the rules. See #no-vote-list.\n'
+
+        hiveHandler = HiveHandler()
+        subscriberInfo = hiveHandler.getSubscriberInfo(report.author)
+        if subscriberInfo is not None:
+            joinedDate = '3 month+' if len(subscriberInfo['joined']) == 0 else str(datetime.strptime(
+                subscriberInfo['joined'], '%Y-%m-%dT%H:%M:%S'
+            ))
+            additionalInfo += '{author} joined us on {joined}, submitted {posts} posts to LMAC and has made {comments} comments in the community.'.format(
+                posts=subscriberInfo['posts'],
+                comments=subscriberInfo['comments'],
+                joined=joinedDate
+            )
 
         if 'postType' not in report.meta or report.meta['postType'] == HivePostIdentifier.UNKOWN_POST_TYPE:
             postTypeText = 'Unknown post type.'

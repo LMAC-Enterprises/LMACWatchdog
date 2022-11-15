@@ -1,5 +1,7 @@
 import datetime
 import json
+import re
+from typing import Dict, Optional
 
 import beemstorage
 import pytz
@@ -14,6 +16,11 @@ from services.Registry import RegistryHandler
 
 
 class HiveWallet:
+    _hive: Hive
+    _hiveCommunity: Community
+    _username: str
+    _communityTag: str
+
     @staticmethod
     def create(walletPassword: str, postingKey: str) -> bool:
         try:
@@ -41,10 +48,16 @@ class HiveWallet:
         self._hive = Hive(hiveApiUrl)
         self._hiveCommunity = Community(community, blockchain_instance=self._hive)
         self._username = username
+        self._subscribers = {}
+        self._communityTag = community
 
     @property
     def hive(self) -> Hive:
         return self._hive
+
+    @property
+    def communityTag(self) -> str:
+        return self._communityTag
     
     @property
     def username(self):
@@ -57,6 +70,10 @@ class HiveWallet:
 
     def muteInCommunity(self, comment: Comment, reason: str):
         self._hiveCommunity.mute_post(comment.author, comment.permlink, reason, self._username)
+
+    def getCommunity(self):
+        return self._hiveCommunity
+
 
 class QueuedHiveMessage:
     _toAuthor: str
@@ -163,6 +180,8 @@ class HiveHandler:
     _ignorePostsCommentedBy: list
     _exceptAuthors: list
 
+    _subscribers: Dict
+
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(HiveHandler, cls).__new__(cls)
@@ -176,6 +195,7 @@ class HiveHandler:
             cls._simulate = False
             cls._ignorePostsCommentedBy = []
             cls._exceptAuthors = []
+            cls._subscribers = {}
 
         return cls._instance
 
@@ -187,6 +207,7 @@ class HiveHandler:
         self._simulate = simulate
         self._ignorePostsCommentedBy = ignorePostsCommentedBy
         self._exceptAuthors = exceptAuthors
+        self._loadSubscribers()
 
     def addOnPostLoadedHandler(self, handlerCallback):
         self._onPostLoadedHandlers.append(handlerCallback)
@@ -306,3 +327,78 @@ class HiveHandler:
             self._hiveWallet.muteInCommunity(queuedPostToMute.comment, queuedPostToMute.reason)
 
         return True
+
+    def finish(self):
+        # Save subscribers
+        jsonSubscribersObject = json.dumps(self._subscribers, indent=4)
+        with open("subscribers.json", "w") as outfile:
+            outfile.write(jsonSubscribersObject)
+
+    def _loadSubscribers(self):
+
+        with open("subscribers.json", "r") as subscribersJsonFile:
+            self._subscribers = json.load(subscribersJsonFile)
+
+        lastFoundId = 0
+        usernameExtractionRegex = re.compile(r'^@([a-z0-9_\-\.]+).*$', re.RegexFlag.DOTALL)
+
+        while True:
+            activities = self._hiveWallet.getCommunity().get_activities(
+                limit=100,
+                last_id=None if lastFoundId == 0 else lastFoundId
+            )
+            if activities is None or len(activities) == 0:
+                break
+            else:
+                lastFoundId = activities[-1]['id']
+                for activity in activities:
+
+                    if activity['type'] != 'subscribe':
+                        continue
+
+                    match = usernameExtractionRegex.search(activity['msg'])
+                    if not match:
+                        continue
+
+                    username = str(match[1])
+                    if username in self._subscribers.keys():
+                        continue
+
+                    self._subscribers[username] = {
+                        'joined': activity['date'],
+                        'rejoined': False,
+                        'posts': -1,
+                        'comments': -1,
+                        'averageTrailVote': -1
+                    }
+
+    def getSubscriberInfo(self, subscriberName) -> Optional[Dict]:
+        if subscriberName not in self._subscribers.keys():
+            return None
+
+        subscriberInfo = self._subscribers[subscriberName]
+        subscriberInfo['posts'] = self._countAuthorPostsInCommunity(subscriberName)
+        subscriberInfo['comments'] = self._countAuthorCommentsInCommunity(subscriberName)
+        self._subscribers[subscriberName] = subscriberInfo
+
+        return subscriberInfo
+
+    def _countAuthorPostsInCommunity(self, subscriberName: str) -> int:
+        comments = 0
+
+        account = Account(subscriberName, blockchain_instance=self._hiveWallet.hive)
+        for comment in account.blog_history():
+            if comment.category == self._hiveWallet.communityTag:
+                comments += 1
+
+        return comments
+
+    def _countAuthorCommentsInCommunity(self, subscriberName: str) -> int:
+        comments = 0
+
+        account = Account(subscriberName, blockchain_instance=self._hiveWallet.hive)
+        for comment in account.comment_history():
+            if comment.category == self._hiveWallet.communityTag:
+                comments += 1
+
+        return comments
