@@ -74,16 +74,21 @@ class CuratablePostReporter(Reporter):
 
         hiveHandler = HiveHandler()
         subscriberInfo = hiveHandler.getSubscriberInfo(report.author)
-        if subscriberInfo is not None:
-            joinedDate = '3 month+' if len(subscriberInfo['joined']) == 0 else str(datetime.strptime(
-                subscriberInfo['joined'], '%Y-%m-%dT%H:%M:%S'
-            ))
-            additionalInfo += '**NEW USER!**\n`{author} joined us on {joined}, submitted at least {posts} posts to LMAC and has made at least {comments} comments in the community.`\n'.format(
-                posts=subscriberInfo['posts'],
-                comments=subscriberInfo['comments'],
-                joined=joinedDate,
-                author=report.author
-            )
+
+        notificationMessage = CuratablePostReporter.formatNotification(
+            report,
+            subscriberInfo,
+            additionalInfo
+        )
+
+        self._discordDispatcher.enterChatroom(self._reportInDiscordChannelId)
+        self._discordDispatcher.enqueueMessage(notificationMessage)
+
+    def onStart(self, arguments: dict):
+        self._reportInDiscordChannelId = arguments['reportInDiscordChannelId']
+
+    @staticmethod
+    def formatNotification(report: SuspiciousActivityReport, subscriberInfo: dict, additionalInfo: str) -> str:
 
         if 'postType' not in report.meta or report.meta['postType'] == HivePostIdentifier.UNKOWN_POST_TYPE:
             postTypeText = 'Unknown post type.'
@@ -99,15 +104,42 @@ class CuratablePostReporter(Reporter):
             else:
                 postTypeText = 'Unknown post type.'
 
-        self._discordDispatcher.enterChatroom(self._reportInDiscordChannelId)
-        self._discordDispatcher.enqueueMessage(
-            '{info}{postType}\nhttps://peakd.com/@{author}/{permlink}'.format(
+        if subscriberInfo is None:
+            return '{info}{postType}\nhttps://peakd.com/@{author}/{permlink}'.format(
                 postType=postTypeText,
                 permlink=report.permlink,
                 author=report.author,
                 info=additionalInfo
             )
-        )
 
-    def onStart(self, arguments: dict):
-        self._reportInDiscordChannelId = arguments['reportInDiscordChannelId']
+        ratio: float = 0.0
+        if subscriberInfo['posts'] == 0 or subscriberInfo['comments'] == 0:
+            ratio = 0.0
+        else:
+            ratio = subscriberInfo['posts'] / subscriberInfo['comments']
+
+        ratingIcon = '🔴'
+        if ratio < 1:
+            ratingIcon = '🟢'
+        elif ratio == 1:
+            ratingIcon = '🟡'
+        elif ratio > 1 and ratio < 2:
+            ratingIcon = '🟡'
+        elif ratio >= 2:
+            ratingIcon = '🔴'
+
+        joinedDate = datetime.strptime(subscriberInfo['joined'], '%Y-%m-%dT%H:%M:%S')
+        dateDifference = datetime.now().date() - joinedDate.date()
+        days: int = dateDifference.days
+
+        return '{author}\n- 📅: {daysJoined} days\n- ✉️: {posts} posts\n- 💬: {comments} comments\n- ✉/💬: {ratio} ({ratingIcon})\n{postType}\n{info}https://peakd.com/@{author}/{permlink}'.format(
+            postType=postTypeText,
+            permlink=report.permlink,
+            author=report.author,
+            info=additionalInfo,
+            posts=subscriberInfo['posts'],
+            comments=subscriberInfo['comments'],
+            ratio=ratio,
+            daysJoined=days,
+            ratingIcon=ratingIcon
+        )
