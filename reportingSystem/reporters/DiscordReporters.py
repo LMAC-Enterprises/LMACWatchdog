@@ -139,7 +139,7 @@ class CuratablePostReporter(Reporter):
             info=additionalInfo,
             posts=subscriberInfo['posts'],
             comments=subscriberInfo['comments'],
-            ratio=ratio,
+            ratio=round(ratio, 2),
             daysJoined=days,
             ratingIcon=ratingIcon
         )
