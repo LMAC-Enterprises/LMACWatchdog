@@ -105,7 +105,7 @@ class CuratablePostReporter(Reporter):
                 postTypeText = 'Unknown post type.'
 
         if subscriberInfo is None:
-            return '{info}{postType}\nhttps://peakd.com/@{author}/{permlink}'.format(
+            return '{info}{postType}\nhttps://peakd.com/@{author}/{permlink}\n---\n'.format(
                 postType=postTypeText,
                 permlink=report.permlink,
                 author=report.author,
@@ -134,7 +134,7 @@ class CuratablePostReporter(Reporter):
         dateDifference = datetime.now().date() - joinedDate.date()
         days: int = dateDifference.days
 
-        return '{author}\n- 📅: {daysJoined} days\n- ✉️: {posts} posts\n- 💬: {comments} comments\n- ✉/💬: {ratio} ({ratingIcon})\n{postType}\n{info}https://peakd.com/@{author}/{permlink}'.format(
+        return '{author}\n- 📅: {daysJoined} days\n- ✉️: {posts} posts\n- 💬: {comments} comments\n- ✉/💬: {ratio} ({ratingIcon})\n{postType}\n{info}https://peakd.com/@{author}/{permlink}\n---\n'.format(
             postType=postTypeText,
             permlink=report.permlink,
             author=report.author,
