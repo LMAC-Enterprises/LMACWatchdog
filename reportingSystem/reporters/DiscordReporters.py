@@ -119,7 +119,9 @@ class CuratablePostReporter(Reporter):
             ratio = subscriberInfo['posts'] / subscriberInfo['comments']
 
         ratingIcon = '🔴'
-        if ratio < 1:
+        if ratio == 0:
+            ratingIcon = '🔴'
+        elif ratio < 1:
             ratingIcon = '🟢'
         elif ratio == 1:
             ratingIcon = '🟡'
